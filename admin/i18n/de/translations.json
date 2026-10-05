@@ -3,7 +3,7 @@
   "placesTab": "Orte",
   "routingTab": "Reisezeiten",
   "helpTab": "Hinweise",
-  "peopleIntro": "Lege Personen an und wähle ihre vorhandenen Breiten- und Längengrad-Datenpunkte aus. Rene und Silke sind mit den bisher genannten IDs vorausgefüllt. Weitere Personen kannst du über die Plus-Schaltfläche ergänzen.",
+  "peopleIntro": "Lege Personen an und wähle ihre vorhandenen Breiten- und Längengrad-Datenpunkte aus. Weitere Personen kannst du über die Plus-Schaltfläche ergänzen.",
   "people": "Personen und Koordinatenquellen",
   "personId": "Eindeutige ID",
   "personName": "Anzeigename",
@@ -23,8 +23,10 @@
   "routingIntro": "Fahrzeiten sind optional. Ohne Routingdienst funktionieren Anwesenheit und Erkennung besuchter Orte weiterhin.",
   "routingEnabled": "Fahrzeiten berechnen",
   "routingUrl": "OSRM-Serveradresse",
+  "useOpenRouteServiceFallback": "OpenRouteService bei OSRM-Ausfall verwenden",
+  "openRouteServiceApiKey": "OpenRouteService-API-Schlüssel",
   "updateIntervalMinutes": "Aktualisierungsintervall",
-  "routingHelp": "Standardmäßig wird der öffentliche OSRM-Demodienst ohne Live-Verkehr verwendet. Du kannst hier später auch die Adresse eines eigenen OSRM-Servers eintragen. Anfragen werden zeitlich begrenzt gesendet.",
+  "routingHelp": "Standardmäßig wird der öffentliche OSRM-Demodienst ohne Live-Verkehr verwendet. Bei einem Fehler kann OpenRouteService einspringen. Erstelle kostenlos ein Konto auf openrouteservice.org, kopiere im Dashboard im Reiter „API Key“ den „Basic Key“ und trage ihn hier ein. Der kostenlose Tarif erlaubt derzeit 2.000 Routenanfragen pro Tag und 40 pro Minute. Anfragen werden zeitlich begrenzt gesendet.",
   "helpIntro": "HomeRadar liest die ausgewählten Koordinaten-Datenpunkte und erstellt pro Person Datenpunkte für Anwesenheit, erkannten Ort, Abstände und optionale Reisezeiten.",
-  "helpPrivacy": "Koordinaten bleiben lokal in ioBroker. Für eine aktive Routenberechnung werden Start- und Zielkoordinaten an die eingetragene OSRM-Serveradresse übertragen. Bei erreichter Zielnähe wird die Reisezeit lokal auf 0 Minuten gesetzt."
+  "helpPrivacy": "Anwesenheitsprüfungen erfolgen lokal. Bei aktiver Routenberechnung werden Start- und Zielkoordinaten an OSRM gesendet; wenn dieser Dienst ausfällt und der Ausweichdienst aktiviert ist, werden sie zusätzlich an OpenRouteService übertragen. Bei erreichter Zielnähe wird die Reisezeit lokal auf 0 Minuten gesetzt."
 }

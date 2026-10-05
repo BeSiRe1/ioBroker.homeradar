@@ -23,7 +23,7 @@
     "adminUI": {
       "config": "json"
     },
-    "type": "general",
+    "type": "geoposition",
     "connectionType": "local",
     "dataSource": "push",
     "compact": true,
@@ -44,8 +44,20 @@
       "travel time"
     ],
     "readme": "README.md",
-    "icon": "homeradar.png"
+    "icon": "homeradar.png",
+    "news": {
+      "NEXT": {
+        "en": "Added OpenRouteService as an optional fallback when the OSRM routing service is unavailable.",
+        "de": "OpenRouteService kann bei Ausfall des OSRM-Routingdienstes optional als Ausweichdienst verwendet werden."
+      }
+    }
   },
+  "encryptedNative": [
+    "openRouteServiceApiKey"
+  ],
+  "protectedNative": [
+    "openRouteServiceApiKey"
+  ],
   "objects": [],
   "instanceObjects": [
     {
@@ -90,6 +102,8 @@
     ],
     "routingEnabled": true,
     "routingUrl": "https://router.project-osrm.org",
+    "useOpenRouteServiceFallback": true,
+    "openRouteServiceApiKey": "",
     "updateIntervalMinutes": 5
   }
 }

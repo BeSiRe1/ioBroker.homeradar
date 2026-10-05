@@ -253,7 +253,7 @@ class HomeRadarAdapter extends utils.Adapter {
         const homePlace = placeDistances.find(item => item.place.isHome);
 
         await this.setValue(`persons.${person.id}.presence.isHome`, !!homePlace && homePlace.distance <= homePlace.place.radius);
-        await this.setValue(`persons.${person.id}.presence.currentPlace`, currentPlace ? currentPlace.place.name : 'Unterwegs');
+        await this.setValue(`persons.${person.id}.presence.currentPlace`, currentPlace ? currentPlace.place.name : 'not_home');
         await this.setValue(`persons.${person.id}.presence.lastUpdate`, Date.now());
 
         for (const item of placeDistances) {
@@ -284,7 +284,7 @@ class HomeRadarAdapter extends utils.Adapter {
                     const minutes = Math.round(route.duration / 60);
                     await this.setValue(`${travelBase}.minutes`, minutes);
                     await this.setValue(`${travelBase}.distance`, Math.round(route.distance / 100) / 10);
-                    await this.setValue(`${travelBase}.status`, 'OK');
+                    await this.setValue(`${travelBase}.status`, route.provider === 'openrouteservice' ? 'OK (OpenRouteService)' : 'OK (OSRM)');
                     if (place.isHome) await this.mirrorHomeTravelTime(person, minutes);
                 } catch (error) {
                     await this.setValue(`${travelBase}.status`, `Fehler: ${error.message || error}`);
@@ -334,10 +334,34 @@ class HomeRadarAdapter extends utils.Adapter {
     }
 
     async requestRoute(origin, destination) {
+        let osrmError;
+        try {
+            return await this.requestOsrmRoute(origin, destination);
+        } catch (error) {
+            osrmError = error;
+        }
+
+        if (!this.config.useOpenRouteServiceFallback) throw osrmError;
+        const apiKey = String(this.config.openRouteServiceApiKey || '').trim();
+        if (!apiKey) {
+            throw new Error(`OSRM: ${osrmError.message || osrmError}; OpenRouteService-Fallback ist aktiviert, aber es ist kein API-Schlüssel eingetragen`);
+        }
+
+        try {
+            return await this.requestOpenRouteServiceRoute(origin, destination, apiKey);
+        } catch (error) {
+            throw new Error(`OSRM: ${osrmError.message || osrmError}; OpenRouteService: ${error.message || error}`);
+        }
+    }
+
+    async requestOsrmRoute(origin, destination) {
         const baseUrl = String(this.config.routingUrl || 'https://router.project-osrm.org').replace(/\/+$/, '');
         const coordinates = `${origin.longitude},${origin.latitude};${destination.longitude},${destination.latitude}`;
         const url = `${baseUrl}/route/v1/driving/${coordinates}?overview=false&alternatives=false&steps=false`;
-        const response = await fetch(url, { signal: AbortSignal.timeout(15000) });
+        const response = await fetch(url, {
+            headers: { 'User-Agent': 'ioBroker.homeradar' },
+            signal: AbortSignal.timeout(15000)
+        });
         if (!response.ok) throw new Error(`Routingdienst antwortet mit HTTP ${response.status}`);
 
         const result = await response.json();
@@ -345,6 +369,32 @@ class HomeRadarAdapter extends utils.Adapter {
             throw new Error('Keine Route gefunden');
         }
         return result.routes[0];
+    }
+
+    async requestOpenRouteServiceRoute(origin, destination, apiKey) {
+        const response = await fetch('https://api.heigit.org/openrouteservice/v2/directions/driving-car', {
+            method: 'POST',
+            headers: {
+                Authorization: apiKey,
+                'Content-Type': 'application/json',
+                Accept: 'application/json'
+            },
+            body: JSON.stringify({
+                coordinates: [
+                    [origin.longitude, origin.latitude],
+                    [destination.longitude, destination.latitude]
+                ]
+            }),
+            signal: AbortSignal.timeout(15000)
+        });
+        if (!response.ok) throw new Error(`Routingdienst antwortet mit HTTP ${response.status}`);
+
+        const result = await response.json();
+        const summary = result.features?.[0]?.properties?.summary;
+        if (!summary || !Number.isFinite(summary.duration) || !Number.isFinite(summary.distance)) {
+            throw new Error('Keine gültige Route gefunden');
+        }
+        return { duration: summary.duration, distance: summary.distance, provider: 'openrouteservice' };
     }
 }
 

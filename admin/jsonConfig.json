@@ -182,6 +182,17 @@
           "default": "https://router.project-osrm.org",
           "sm": 8
         },
+        "useOpenRouteServiceFallback": {
+          "type": "checkbox",
+          "label": "useOpenRouteServiceFallback",
+          "default": true,
+          "sm": 12
+        },
+        "openRouteServiceApiKey": {
+          "type": "password",
+          "label": "openRouteServiceApiKey",
+          "sm": 8
+        },
         "updateIntervalMinutes": {
           "type": "number",
           "label": "updateIntervalMinutes",

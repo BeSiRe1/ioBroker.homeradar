@@ -3,7 +3,7 @@
   "placesTab": "Places",
   "routingTab": "Travel times",
   "helpTab": "Help",
-  "peopleIntro": "Add people and select their existing latitude and longitude states. Rene and Silke are prefilled with the IDs provided so far. Add more people with the plus button.",
+  "peopleIntro": "Add people and select their existing latitude and longitude states. Add more people with the plus button.",
   "people": "People and coordinate sources",
   "personId": "Unique ID",
   "personName": "Display name",
@@ -23,8 +23,10 @@
   "routingIntro": "Travel-time calculation is optional. Presence and place detection continue to work without a routing service.",
   "routingEnabled": "Calculate travel times",
   "routingUrl": "OSRM server address",
+  "useOpenRouteServiceFallback": "Use OpenRouteService if OSRM fails",
+  "openRouteServiceApiKey": "OpenRouteService API key",
   "updateIntervalMinutes": "Update interval",
-  "routingHelp": "By default, the public OSRM demo service is used without live traffic. You can also enter the address of a self-hosted OSRM server. Requests are rate limited.",
+  "routingHelp": "By default, the public OSRM demo service is used without live traffic. If it fails, OpenRouteService can be used as a fallback. Create a free account at openrouteservice.org, copy the Basic Key from the API Key tab of the dashboard, and enter it here. The free plan currently allows 2,000 directions requests per day and 40 per minute. Requests are rate limited.",
   "helpIntro": "HomeRadar reads the selected coordinate states and creates per-person states for presence, detected place, distances, and optional travel times.",
-  "helpPrivacy": "Coordinates remain local in ioBroker. When route calculation is enabled, origin and destination coordinates are sent to the configured OSRM server. When a person is within the destination radius, travel time is set to 0 minutes locally."
+  "helpPrivacy": "Presence calculations stay local. When route calculation is enabled, origin and destination coordinates are sent to OSRM; if that service fails and the fallback is enabled, they are also sent to OpenRouteService. When a person is within the destination radius, travel time is set to 0 minutes locally."
 }
