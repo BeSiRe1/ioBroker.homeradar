@@ -176,15 +176,15 @@ class HomeRadarAdapter extends utils.Adapter {
             await this.ensureState(`persons.${person.id}.presence.lastUpdate`, 'Letzte Koordinatenprüfung', 'number', 'date', 'ms');
             await this.ensureChannel(`persons.${person.id}.places`, 'Orte');
             await this.ensureChannel(`persons.${person.id}.travelTimes`, 'Reisezeiten');
+            await this.ensureChannel(`persons.${person.id}.travelTimes.home`, 'Fahrzeit nach Hause');
+            await this.ensureState(`persons.${person.id}.travelTimes.home.minutes`, 'Fahrzeit nach Hause', 'number', 'value.timer', 'min');
+            await this.ensureState(`persons.${person.id}.travelTimes.home.distance`, 'Streckenlänge nach Hause', 'number', 'value.distance', 'km');
+            await this.ensureState(`persons.${person.id}.travelTimes.home.status`, 'Status der Routenberechnung nach Hause', 'string', 'text');
 
             for (const place of this.places) {
                 await this.ensureChannel(`persons.${person.id}.places.${place.id}`, place.name);
                 await this.ensureState(`persons.${person.id}.places.${place.id}.inside`, 'Innerhalb des Erkennungsradius', 'boolean', 'indicator');
                 await this.ensureState(`persons.${person.id}.places.${place.id}.distance`, 'Luftlinienentfernung', 'number', 'value.distance', 'm');
-                await this.ensureChannel(`persons.${person.id}.travelTimes.${place.id}`, `Reisezeit nach ${place.name}`);
-                await this.ensureState(`persons.${person.id}.travelTimes.${place.id}.minutes`, 'Fahrzeit', 'number', 'value.timer', 'min');
-                await this.ensureState(`persons.${person.id}.travelTimes.${place.id}.distance`, 'Streckenlänge', 'number', 'value.distance', 'km');
-                await this.ensureState(`persons.${person.id}.travelTimes.${place.id}.status`, 'Status der Routenberechnung', 'string', 'text');
             }
         }
     }
@@ -260,33 +260,34 @@ class HomeRadarAdapter extends utils.Adapter {
 
             const place = item.place;
             const inside = item.distance <= place.radius;
-            const base = `persons.${person.id}`;
-            const placeBase = `${base}.places.${place.id}`;
-            const travelBase = `${base}.travelTimes.${place.id}`;
+            const placeBase = `persons.${person.id}.places.${place.id}`;
 
             await this.setValue(`${placeBase}.inside`, inside);
             await this.setValue(`${placeBase}.distance`, Math.round(item.distance));
+        }
 
-            if (inside) {
-                await this.setValue(`${travelBase}.minutes`, 0);
-                await this.setValue(`${travelBase}.distance`, 0);
-                await this.setValue(`${travelBase}.status`, 'Am Ziel');
-            } else if (!this.config.routingEnabled) {
-                await this.setValue(`${travelBase}.status`, 'Routenberechnung deaktiviert');
-            } else {
-                await this.setValue(`${travelBase}.status`, 'Wird berechnet');
-                try {
-                    const route = await this.enqueueRoute(coordinates, place);
-                    if (this.personGeneration.get(person.id) !== generation) return;
+        const travelBase = `persons.${person.id}.travelTimes.home`;
+        if (!homePlace) {
+            await this.setValue(`${travelBase}.status`, 'Kein Zuhause-Ort konfiguriert');
+        } else if (homePlace.distance <= homePlace.place.radius) {
+            await this.setValue(`${travelBase}.minutes`, 0);
+            await this.setValue(`${travelBase}.distance`, 0);
+            await this.setValue(`${travelBase}.status`, 'Am Ziel');
+        } else if (!this.config.routingEnabled) {
+            await this.setValue(`${travelBase}.status`, 'Routenberechnung deaktiviert');
+        } else {
+            await this.setValue(`${travelBase}.status`, 'Wird berechnet');
+            try {
+                const route = await this.enqueueRoute(coordinates, homePlace.place);
+                if (this.personGeneration.get(person.id) !== generation) return;
 
-                    const minutes = Math.round(route.duration / 60);
-                    await this.setValue(`${travelBase}.minutes`, minutes);
-                    await this.setValue(`${travelBase}.distance`, Math.round(route.distance / 100) / 10);
-                    await this.setValue(`${travelBase}.status`, route.provider === 'openrouteservice' ? 'OK (OpenRouteService)' : 'OK (OSRM)');
-                } catch (error) {
-                    await this.setValue(`${travelBase}.status`, `Fehler: ${error.message || error}`);
-                    this.log.warn(`Routenberechnung für ${person.name} nach ${place.name} fehlgeschlagen: ${error.message || error}`);
-                }
+                const minutes = Math.round(route.duration / 60);
+                await this.setValue(`${travelBase}.minutes`, minutes);
+                await this.setValue(`${travelBase}.distance`, Math.round(route.distance / 100) / 10);
+                await this.setValue(`${travelBase}.status`, route.provider === 'openrouteservice' ? 'OK (OpenRouteService)' : 'OK (OSRM)');
+            } catch (error) {
+                await this.setValue(`${travelBase}.status`, `Fehler: ${error.message || error}`);
+                this.log.warn(`Routenberechnung für ${person.name} nach Hause fehlgeschlagen: ${error.message || error}`);
             }
         }
     }

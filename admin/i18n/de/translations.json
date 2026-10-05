@@ -25,6 +25,6 @@
   "openRouteServiceApiKey": "OpenRouteService-API-Schlüssel",
   "updateIntervalMinutes": "Aktualisierungsintervall",
   "routingHelp": "Standardmäßig wird der öffentliche OSRM-Demodienst ohne Live-Verkehr verwendet. Bei einem Fehler kann OpenRouteService einspringen. Erstelle kostenlos ein Konto auf openrouteservice.org, kopiere im Dashboard im Reiter „API Key“ den „Basic Key“ und trage ihn hier ein. Der kostenlose Tarif erlaubt derzeit 2.000 Routenanfragen pro Tag und 40 pro Minute. Anfragen werden zeitlich begrenzt gesendet.",
-  "helpIntro": "HomeRadar liest die ausgewählten Koordinaten-Datenpunkte und erstellt pro Person Datenpunkte für Anwesenheit, erkannten Ort, Abstände und optionale Reisezeiten.",
-  "helpPrivacy": "Anwesenheitsprüfungen erfolgen lokal. Bei aktiver Routenberechnung werden Start- und Zielkoordinaten an OSRM gesendet; wenn dieser Dienst ausfällt und der Ausweichdienst aktiviert ist, werden sie zusätzlich an OpenRouteService übertragen. Bei erreichter Zielnähe wird die Reisezeit lokal auf 0 Minuten gesetzt."
+  "helpIntro": "HomeRadar liest die ausgewählten Koordinaten-Datenpunkte und erstellt pro Person Datenpunkte für Anwesenheit, erkannten Ort, Abstände und optional die Fahrzeit nach Hause.",
+  "helpPrivacy": "Anwesenheitsprüfungen erfolgen lokal. Bei aktivierter Fahrzeitberechnung nach Hause werden die aktuellen Koordinaten der Person und die Zuhause-Koordinaten an OSRM gesendet; wenn dieser Dienst ausfällt und der Ausweichdienst aktiviert ist, werden sie zusätzlich an OpenRouteService übertragen. Innerhalb des Zuhause-Radius wird die Fahrzeit lokal auf 0 Minuten gesetzt."
 }

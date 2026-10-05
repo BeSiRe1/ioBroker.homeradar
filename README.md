@@ -1,6 +1,6 @@
 # HomeRadar for ioBroker
 
-HomeRadar detects locally whether configured people are at home or at other frequently visited places. It can optionally calculate driving times to those places using public routing services.
+HomeRadar detects locally whether configured people are at home or at other frequently visited places. It can optionally calculate the driving time from each person's current location to home using public routing services.
 
 For routing details, see the [OSRM documentation](https://project-osrm.org/docs/v5.24.0/api/) and the [OpenRouteService API documentation](https://openrouteservice.org/dev/).
 
@@ -9,8 +9,8 @@ For routing details, see the [OSRM documentation](https://project-osrm.org/docs/
 - Configure any number of people using existing latitude and longitude states in ioBroker.
 - Configure any number of named places with individual detection radii.
 - Detect presence at home and at other configured places using local coordinate calculations.
-- Optionally calculate driving times with OSRM and use OpenRouteService as a fallback if OSRM fails.
-- Set the travel time to zero locally when a person is within the destination radius; no routing request is needed for that destination.
+- Optionally calculate driving times home with OSRM and use OpenRouteService as a fallback if OSRM fails.
+- Set the travel time home to zero locally when a person is within the home radius; no routing request is needed at home.
 - Show each person's presence, current place, distances, travel times, and route calculation status in the ioBroker object tree.
 
 ## Object structure
@@ -26,13 +26,13 @@ The adapter creates states under `homeradar.0.persons.<personId>`:
 ├─ places.<placeId>
 │  ├─ inside                 whether the person is within the place radius
 │  └─ distance               straight-line distance in meters
-└─ travelTimes.<placeId>
-   ├─ minutes                estimated driving time
-   ├─ distance               route length in kilometers
+└─ travelTimes.home
+   ├─ minutes                estimated driving time home
+   ├─ distance               route length home in kilometers
    └─ status                 route calculation status
 ```
 
-Presence and distance calculations are local. When a route is requested, the person's current coordinates and the destination coordinates are sent to the routing service.
+Presence and distance calculations are local. When a route home is requested, the person's current coordinates and the home coordinates are sent to the routing service.
 
 ## Setup
 
@@ -75,7 +75,7 @@ MIT. See [LICENSE](LICENSE).
 
 # HomeRadar für ioBroker
 
-HomeRadar erkennt lokal, ob sich konfigurierte Personen zu Hause oder an anderen häufig besuchten Orten befinden. Optional berechnet der Adapter Fahrzeiten zu diesen Orten über öffentliche Routingdienste.
+HomeRadar erkennt lokal, ob sich konfigurierte Personen zu Hause oder an anderen häufig besuchten Orten befinden. Optional berechnet der Adapter über öffentliche Routingdienste die Fahrzeit vom aktuellen Standort jeder Person nach Hause.
 
 Weitere Informationen zum Routing findest du in der [OSRM-Dokumentation](https://project-osrm.org/docs/v5.24.0/api/) und in der [OpenRouteService-API-Dokumentation](https://openrouteservice.org/dev/).
 
@@ -84,8 +84,8 @@ Weitere Informationen zum Routing findest du in der [OSRM-Dokumentation](https:/
 - Beliebig viele Personen über vorhandene ioBroker-Datenpunkte für Breiten- und Längengrad einrichten.
 - Beliebig viele benannte Orte mit individuellem Erkennungsradius einrichten.
 - Anwesenheit zu Hause und an anderen konfigurierten Orten anhand der Koordinaten lokal erkennen.
-- Fahrzeiten optional mit OSRM berechnen und bei einem Ausfall von OSRM OpenRouteService als Ausweichdienst verwenden.
-- Die Fahrzeit lokal auf null setzen, wenn eine Person innerhalb des Zielradius ist; dafür wird keine Routenanfrage benötigt.
+- Fahrzeiten nach Hause optional mit OSRM berechnen und bei einem Ausfall von OSRM OpenRouteService als Ausweichdienst verwenden.
+- Die Fahrzeit nach Hause lokal auf null setzen, wenn sich eine Person innerhalb des Zuhause-Radius befindet; dafür wird keine Routenanfrage benötigt.
 - Anwesenheit, aktuellen Ort, Entfernungen, Fahrzeiten und den Status der Routenberechnung im ioBroker-Datenpunktbaum anzeigen.
 
 ## Datenpunktstruktur
@@ -101,13 +101,13 @@ Der Adapter legt Datenpunkte unter `homeradar.0.persons.<personId>` an:
 ├─ places.<placeId>
 │  ├─ inside                 Person befindet sich innerhalb des Ortsradius
 │  └─ distance               Luftlinienentfernung in Metern
-└─ travelTimes.<placeId>
-   ├─ minutes                geschätzte Fahrzeit
-   ├─ distance               Streckenlänge in Kilometern
+└─ travelTimes.home
+   ├─ minutes                geschätzte Fahrzeit nach Hause
+   ├─ distance               Streckenlänge nach Hause in Kilometern
    └─ status                 Status der Routenberechnung
 ```
 
-Anwesenheit und Entfernungen werden lokal berechnet. Für eine Routenanfrage sendet der Adapter die aktuellen Koordinaten der Person und die Zielkoordinaten an den Routingdienst.
+Anwesenheit und Entfernungen werden lokal berechnet. Für eine Routenanfrage nach Hause sendet der Adapter die aktuellen Koordinaten der Person und die Zuhause-Koordinaten an den Routingdienst.
 
 ## Einrichtung
 

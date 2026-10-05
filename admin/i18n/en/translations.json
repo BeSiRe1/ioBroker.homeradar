@@ -25,6 +25,6 @@
   "openRouteServiceApiKey": "OpenRouteService API key",
   "updateIntervalMinutes": "Update interval",
   "routingHelp": "By default, the public OSRM demo service is used without live traffic. If it fails, OpenRouteService can be used as a fallback. Create a free account at openrouteservice.org, copy the Basic Key from the API Key tab of the dashboard, and enter it here. The free plan currently allows 2,000 directions requests per day and 40 per minute. Requests are rate limited.",
-  "helpIntro": "HomeRadar reads the selected coordinate states and creates per-person states for presence, detected place, distances, and optional travel times.",
-  "helpPrivacy": "Presence calculations stay local. When route calculation is enabled, origin and destination coordinates are sent to OSRM; if that service fails and the fallback is enabled, they are also sent to OpenRouteService. When a person is within the destination radius, travel time is set to 0 minutes locally."
+  "helpIntro": "HomeRadar reads the selected coordinate states and creates per-person states for presence, detected place, distances, and optional travel time home.",
+  "helpPrivacy": "Presence calculations stay local. When route calculation home is enabled, the person's current coordinates and home coordinates are sent to OSRM; if that service fails and the fallback is enabled, they are also sent to OpenRouteService. When a person is within the home radius, travel time is set to 0 minutes locally."
 }
