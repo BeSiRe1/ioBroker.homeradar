@@ -39,7 +39,7 @@ class HomeRadarAdapter extends utils.Adapter {
         await this.setState('info.connection', true, true);
         for (const person of this.people) this.schedulePersonUpdate(person);
 
-        const intervalMinutes = Math.max(1, Number(this.config.updateIntervalMinutes) || 5);
+        const intervalMinutes = Math.max(1, Number(this.getConfigValue('routingTab', 'updateIntervalMinutes', 5)) || 5);
         this.refreshTimer = this.setInterval(() => {
             for (const person of this.people) this.schedulePersonUpdate(person);
         }, intervalMinutes * 60 * 1000);
@@ -51,13 +51,21 @@ class HomeRadarAdapter extends utils.Adapter {
         if (person) this.schedulePersonUpdate(person);
     }
 
+    getConfigValue(section, key, fallback) {
+        const nested = this.config[section];
+        if (nested && Object.prototype.hasOwnProperty.call(nested, key)) return nested[key];
+        if (Object.prototype.hasOwnProperty.call(this.config, key)) return this.config[key];
+        return fallback;
+    }
+
     onUnload(callback) {
         if (this.refreshTimer) this.clearInterval(this.refreshTimer);
         callback();
     }
 
     loadPeople() {
-        const configured = Array.isArray(this.config.people) ? this.config.people : [];
+        const people = this.getConfigValue('peopleTab', 'people', []);
+        const configured = Array.isArray(people) ? people : [];
         const result = [];
         const usedIds = new Set();
 
@@ -84,7 +92,8 @@ class HomeRadarAdapter extends utils.Adapter {
     }
 
     loadPlaces() {
-        const configured = Array.isArray(this.config.places) ? this.config.places : [];
+        const places = this.getConfigValue('placesTab', 'places', []);
+        const configured = Array.isArray(places) ? places : [];
         const result = [];
         const usedIds = new Set();
         let homeAlreadySelected = false;
@@ -273,7 +282,7 @@ class HomeRadarAdapter extends utils.Adapter {
             await this.setValue(`${travelBase}.minutes`, 0);
             await this.setValue(`${travelBase}.distance`, 0);
             await this.setValue(`${travelBase}.status`, 'Am Ziel');
-        } else if (!this.config.routingEnabled) {
+        } else if (!this.getConfigValue('routingTab', 'routingEnabled', true)) {
             await this.setValue(`${travelBase}.status`, 'Routenberechnung deaktiviert');
         } else {
             await this.setValue(`${travelBase}.status`, 'Wird berechnet');
@@ -330,8 +339,8 @@ class HomeRadarAdapter extends utils.Adapter {
             osrmError = error;
         }
 
-        if (!this.config.useOpenRouteServiceFallback) throw osrmError;
-        const apiKey = String(this.config.openRouteServiceApiKey || '').trim();
+        if (!this.getConfigValue('routingTab', 'useOpenRouteServiceFallback', false)) throw osrmError;
+        const apiKey = String(this.getConfigValue('routingTab', 'openRouteServiceApiKey', '') || '').trim();
         if (!apiKey) {
             throw new Error(`OSRM: ${osrmError.message || osrmError}; OpenRouteService-Fallback ist aktiviert, aber es ist kein API-Schlüssel eingetragen`);
         }
@@ -344,7 +353,7 @@ class HomeRadarAdapter extends utils.Adapter {
     }
 
     async requestOsrmRoute(origin, destination) {
-        const baseUrl = String(this.config.routingUrl || 'https://router.project-osrm.org').replace(/\/+$/, '');
+        const baseUrl = String(this.getConfigValue('routingTab', 'routingUrl', 'https://router.project-osrm.org') || 'https://router.project-osrm.org').replace(/\/+$/, '');
         const coordinates = `${origin.longitude},${origin.latitude};${destination.longitude},${destination.latitude}`;
         const url = `${baseUrl}/route/v1/driving/${coordinates}?overview=false&alternatives=false&steps=false`;
         const response = await fetch(url, {
