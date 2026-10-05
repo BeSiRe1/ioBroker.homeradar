@@ -99,43 +99,61 @@
               "attr": "id",
               "type": "text",
               "title": "placeId",
-              "width": "14%",
+              "width": "12%",
               "filter": false
             },
             {
               "attr": "name",
               "type": "text",
               "title": "placeName",
-              "width": "18%",
+              "width": "12%",
               "filter": false
             },
             {
               "attr": "latitude",
               "type": "number",
               "title": "latitude",
-              "width": "15%",
+              "width": "12%",
               "filter": false
             },
             {
               "attr": "longitude",
               "type": "number",
               "title": "longitude",
-              "width": "15%",
+              "width": "12%",
               "filter": false
             },
             {
               "attr": "radius",
               "type": "number",
               "title": "radius",
-              "width": "16%",
+              "width": "11%",
               "filter": false,
               "default": 100
+            },
+            {
+              "attr": "fallbackHomeDistanceKm",
+              "type": "number",
+              "title": "fallbackHomeDistanceKm",
+              "width": "15%",
+              "filter": false,
+              "min": 0,
+              "step": 0.1
+            },
+            {
+              "attr": "fallbackHomeMinutes",
+              "type": "number",
+              "title": "fallbackHomeMinutes",
+              "width": "14%",
+              "filter": false,
+              "min": 0,
+              "step": 1
             },
             {
               "attr": "isHome",
               "type": "checkbox",
               "title": "isHome",
-              "width": "12%",
+              "width": "10%",
               "filter": false,
               "default": false,
               "onChange": {

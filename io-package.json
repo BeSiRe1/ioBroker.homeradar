@@ -47,8 +47,8 @@
     "icon": "homeradar.png",
     "news": {
       "NEXT": {
-        "en": "Added OpenRouteService as an optional fallback when the OSRM routing service is unavailable.",
-        "de": "OpenRouteService kann bei Ausfall des OSRM-Routingdienstes optional als Ausweichdienst verwendet werden."
+        "en": "Added current-location map links, home presence summary, cached route matrices to places, and optional per-place home-route fallbacks.",
+        "de": "Aktuelle Koordinaten mit Kartenlink, zentrale Anwesenheitsübersicht, zwischengespeicherte Fahrzeitmatrizen zu Orten und optionale Orts-Fallbacks für Heimfahrten ergänzt."
       }
     }
   },
@@ -74,12 +74,18 @@
     }
   ],
   "native": {
-    "people": [],
-    "places": [],
-    "routingEnabled": true,
-    "routingUrl": "https://router.project-osrm.org",
-    "useOpenRouteServiceFallback": false,
-    "openRouteServiceApiKey": "",
-    "updateIntervalMinutes": 5
+    "peopleTab": {
+      "people": []
+    },
+    "placesTab": {
+      "places": []
+    },
+    "routingTab": {
+      "routingEnabled": true,
+      "routingUrl": "https://router.project-osrm.org",
+      "useOpenRouteServiceFallback": false,
+      "openRouteServiceApiKey": "",
+      "updateIntervalMinutes": 5
+    }
   }
 }
