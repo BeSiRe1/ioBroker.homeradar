@@ -2,7 +2,7 @@
   "name": "iobroker.homeradar",
   "version": "0.1.0",
   "description": "Personen, Orte und Reisezeiten für ioBroker",
-  "author": "Rene",
+  "author": "HomeRadar contributors",
   "license": "MIT",
   "main": "main.js",
   "engines": {

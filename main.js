@@ -77,8 +77,7 @@ class HomeRadarAdapter extends utils.Adapter {
                 id,
                 name: String(entry.name || id),
                 latitudeId: String(entry.latitudeId).trim(),
-                longitudeId: String(entry.longitudeId).trim(),
-                homeTravelTimeId: String(entry.homeTravelTimeId || '').trim()
+                longitudeId: String(entry.longitudeId).trim()
             });
         }
         return result;
@@ -272,7 +271,6 @@ class HomeRadarAdapter extends utils.Adapter {
                 await this.setValue(`${travelBase}.minutes`, 0);
                 await this.setValue(`${travelBase}.distance`, 0);
                 await this.setValue(`${travelBase}.status`, 'Am Ziel');
-                if (place.isHome) await this.mirrorHomeTravelTime(person, 0);
             } else if (!this.config.routingEnabled) {
                 await this.setValue(`${travelBase}.status`, 'Routenberechnung deaktiviert');
             } else {
@@ -285,21 +283,11 @@ class HomeRadarAdapter extends utils.Adapter {
                     await this.setValue(`${travelBase}.minutes`, minutes);
                     await this.setValue(`${travelBase}.distance`, Math.round(route.distance / 100) / 10);
                     await this.setValue(`${travelBase}.status`, route.provider === 'openrouteservice' ? 'OK (OpenRouteService)' : 'OK (OSRM)');
-                    if (place.isHome) await this.mirrorHomeTravelTime(person, minutes);
                 } catch (error) {
                     await this.setValue(`${travelBase}.status`, `Fehler: ${error.message || error}`);
                     this.log.warn(`Routenberechnung für ${person.name} nach ${place.name} fehlgeschlagen: ${error.message || error}`);
                 }
             }
-        }
-    }
-
-    async mirrorHomeTravelTime(person, minutes) {
-        if (!person.homeTravelTimeId) return;
-        try {
-            await this.setForeignState(person.homeTravelTimeId, minutes, true);
-        } catch (error) {
-            this.log.warn(`Reisezeit konnte nicht in ${person.homeTravelTimeId} geschrieben werden: ${error.message || error}`);
         }
     }
 

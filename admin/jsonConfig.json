@@ -66,19 +66,6 @@
                   ]
                 }
               }
-            },
-            {
-              "attr": "homeTravelTimeId",
-              "type": "objectId",
-              "title": "homeTravelTimeId",
-              "width": "28%",
-              "filter": false,
-              "customFilter": {
-                "type": "state",
-                "common": {
-                  "type": "number"
-                }
-              }
             }
           ]
         },
@@ -150,7 +137,10 @@
               "title": "isHome",
               "width": "12%",
               "filter": false,
-              "default": false
+              "default": false,
+              "onChange": {
+                "calculateFunc": "if (data.isHome) { globalData.places.forEach((place, index) => { if (index !== arrayIndex) place.isHome = false; }); } return data.isHome;"
+              }
             }
           ]
         },
@@ -185,7 +175,7 @@
         "useOpenRouteServiceFallback": {
           "type": "checkbox",
           "label": "useOpenRouteServiceFallback",
-          "default": true,
+          "default": false,
           "sm": 12
         },
         "openRouteServiceApiKey": {

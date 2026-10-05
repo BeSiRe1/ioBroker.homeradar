@@ -11,7 +11,6 @@ For routing details, see the [OSRM documentation](https://project-osrm.org/docs/
 - Detect presence at home and at other configured places using local coordinate calculations.
 - Optionally calculate driving times with OSRM and use OpenRouteService as a fallback if OSRM fails.
 - Set the travel time to zero locally when a person is within the destination radius; no routing request is needed for that destination.
-- Optionally mirror the travel time to home into an existing state.
 - Show each person's presence, current place, distances, travel times, and route calculation status in the ioBroker object tree.
 
 ## Object structure
@@ -38,13 +37,12 @@ Presence and distance calculations are local. When a route is requested, the per
 ## Setup
 
 1. In the adapter instance settings, add each person and select their existing latitude and longitude states.
-2. Add the places you want to monitor, including their coordinates and detection radii. Mark one place as home.
-3. Optionally select an existing state where HomeRadar should mirror that person's travel time to home.
-4. Enable travel time calculation and select an OSRM server. The public OSRM demo server is preconfigured.
-5. To allow OpenRouteService as a fallback, leave the fallback option enabled and add an API key as described below.
-6. Set the update interval. Coordinate changes trigger an update as well.
+2. Add the places you want to monitor, including their coordinates and detection radii. Mark one place as home. Selecting a different home place clears the previous selection.
+3. Enable travel time calculation and select an OSRM server. The public OSRM demo server is preconfigured.
+4. OpenRouteService fallback is disabled by default. To use it, enable the fallback option and add an API key as described below.
+5. Set the update interval. Coordinate changes trigger an update as well.
 
-A sample home location with a 100-meter radius is preconfigured and can be edited or removed. Sample people and places can also be changed in the instance settings.
+No example people, places, personal coordinates, or coordinate datapoint IDs are preconfigured. Add the people and places you want to use in the instance settings.
 
 ## OpenRouteService API key
 
@@ -88,7 +86,6 @@ Weitere Informationen zum Routing findest du in der [OSRM-Dokumentation](https:/
 - Anwesenheit zu Hause und an anderen konfigurierten Orten anhand der Koordinaten lokal erkennen.
 - Fahrzeiten optional mit OSRM berechnen und bei einem Ausfall von OSRM OpenRouteService als Ausweichdienst verwenden.
 - Die Fahrzeit lokal auf null setzen, wenn eine Person innerhalb des Zielradius ist; dafür wird keine Routenanfrage benötigt.
-- Die Fahrzeit nach Hause optional zusätzlich in einen vorhandenen Datenpunkt schreiben.
 - Anwesenheit, aktuellen Ort, Entfernungen, Fahrzeiten und den Status der Routenberechnung im ioBroker-Datenpunktbaum anzeigen.
 
 ## Datenpunktstruktur
@@ -115,13 +112,12 @@ Anwesenheit und Entfernungen werden lokal berechnet. Für eine Routenanfrage sen
 ## Einrichtung
 
 1. Füge in den Instanzeinstellungen jede Person hinzu und wähle ihre vorhandenen Breiten- und Längengrad-Datenpunkte aus.
-2. Füge die gewünschten Orte mit Koordinaten und Erkennungsradius hinzu. Markiere einen Ort als Zuhause.
-3. Wähle optional einen vorhandenen Datenpunkt aus, in den HomeRadar zusätzlich die Fahrzeit nach Hause schreiben soll.
-4. Aktiviere die Fahrzeitberechnung und wähle einen OSRM-Server. Der öffentliche OSRM-Demodienst ist voreingestellt.
-5. Damit OpenRouteService als Ausweichdienst genutzt werden kann, lass die Fallback-Option aktiviert und trage wie unten beschrieben einen API-Schlüssel ein.
-6. Lege das Aktualisierungsintervall fest. Änderungen an den Koordinaten lösen ebenfalls eine Aktualisierung aus.
+2. Füge die gewünschten Orte mit Koordinaten und Erkennungsradius hinzu. Markiere einen Ort als Zuhause. Wenn du einen anderen Ort auswählst, wird die vorherige Markierung automatisch entfernt.
+3. Aktiviere die Fahrzeitberechnung und wähle einen OSRM-Server. Der öffentliche OSRM-Demodienst ist voreingestellt.
+4. Der OpenRouteService-Ausweichdienst ist standardmäßig ausgeschaltet. Aktiviere die Fallback-Option und trage wie unten beschrieben einen API-Schlüssel ein, wenn du ihn verwenden möchtest.
+5. Lege das Aktualisierungsintervall fest. Änderungen an den Koordinaten lösen ebenfalls eine Aktualisierung aus.
 
-Ein Beispielort „Zu Hause“ mit einem Radius von 100 Metern ist vorbelegt und kann geändert oder entfernt werden. Beispielpersonen und weitere Orte lassen sich ebenfalls in den Instanzeinstellungen anpassen.
+Es sind keine Beispielpersonen, Orte, persönlichen Koordinaten oder Koordinaten-Datenpunkt-IDs vorbelegt. Lege die gewünschten Personen und Orte in den Instanzeinstellungen an.
 
 ## OpenRouteService-API-Schlüssel
 
