@@ -1,0 +1,24 @@
+{
+  "name": "iobroker.homeradar",
+  "version": "0.1.0",
+  "description": "Personen, Orte und Reisezeiten für ioBroker",
+  "author": "Rene",
+  "license": "MIT",
+  "main": "main.js",
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@iobroker/adapter-core": "^3.2.3"
+  },
+  "keywords": [
+    "ioBroker",
+    "location",
+    "presence",
+    "geofence",
+    "travel-time"
+  ],
+  "scripts": {
+    "start": "node main.js"
+  }
+}

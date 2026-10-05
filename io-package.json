@@ -1,0 +1,95 @@
+{
+  "common": {
+    "name": "homeradar",
+    "version": "0.1.0",
+    "title": "HomeRadar",
+    "titleLang": {
+      "en": "HomeRadar",
+      "de": "HomeRadar"
+    },
+    "desc": {
+      "en": "Presence detection for people and places with optional travel times",
+      "de": "Anwesenheitserkennung für Personen und Orte mit optionalen Reisezeiten"
+    },
+    "authors": [
+      "Rene"
+    ],
+    "author": "Rene",
+    "license": "MIT",
+    "platform": "Javascript/Node.js",
+    "mode": "daemon",
+    "enabled": true,
+    "messagebox": true,
+    "adminUI": {
+      "config": "json"
+    },
+    "type": "general",
+    "connectionType": "local",
+    "dataSource": "push",
+    "compact": true,
+    "dependencies": [
+      {
+        "js-controller": ">=6.0.11"
+      }
+    ],
+    "globalDependencies": [
+      {
+        "admin": ">=7.0.23"
+      }
+    ],
+    "keywords": [
+      "location",
+      "presence",
+      "geofence",
+      "travel time"
+    ],
+    "readme": "README.md",
+    "icon": "homeradar.png"
+  },
+  "objects": [],
+  "instanceObjects": [
+    {
+      "_id": "info.connection",
+      "type": "state",
+      "common": {
+        "name": "Verbindung aktiv",
+        "type": "boolean",
+        "role": "indicator.connected",
+        "read": true,
+        "write": false
+      },
+      "native": {}
+    }
+  ],
+  "native": {
+    "people": [
+      {
+        "id": "rene",
+        "name": "Rene",
+        "latitudeId": "0_userdata.0.Personen.Rene.Standort.Koordinaten.Person_Rene_Standort_Breitengrad_(latitude)",
+        "longitudeId": "0_userdata.0.Personen.Rene.Standort.Koordinaten.Person_Rene_Standort_Längengrad_(longitude)",
+        "homeTravelTimeId": "0_userdata.0.Personen.Rene.Standort.Entfernung.Person_Rene_Standort_Entfernung_von_zu_Hause_in_Minuten_neu"
+      },
+      {
+        "id": "silke",
+        "name": "Silke",
+        "latitudeId": "0_userdata.0.Personen.Silke.Standort.Koordinaten.Person_Silke_Standort_Breitengrad_(latitude)",
+        "longitudeId": "0_userdata.0.Personen.Silke.Standort.Koordinaten.Person_Silke_Standort_Längengrad_(longitude)",
+        "homeTravelTimeId": "0_userdata.0.Personen.Silke.Standort.Entfernung.Person_Silke_Standort_Entfernung_von_zu_Hause_in_Minuten_neu"
+      }
+    ],
+    "places": [
+      {
+        "id": "home",
+        "name": "Zu Hause",
+        "latitude": 51.00694241304162,
+        "longitude": 6.637498591692263,
+        "radius": 100,
+        "isHome": true
+      }
+    ],
+    "routingEnabled": true,
+    "routingUrl": "https://router.project-osrm.org",
+    "updateIntervalMinutes": 5
+  }
+}

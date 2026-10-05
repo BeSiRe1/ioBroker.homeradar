@@ -1,0 +1,219 @@
+{
+  "i18n": true,
+  "type": "tabs",
+  "items": {
+    "peopleTab": {
+      "type": "panel",
+      "label": "peopleTab",
+      "items": {
+        "peopleIntro": {
+          "type": "staticText",
+          "text": "peopleIntro",
+          "sm": 12
+        },
+        "people": {
+          "type": "table",
+          "label": "people",
+          "useCardFor": [
+            "xs",
+            "sm"
+          ],
+          "titleAttribute": "name",
+          "showFirstAddOnTop": true,
+          "items": [
+            {
+              "attr": "id",
+              "type": "text",
+              "title": "personId",
+              "width": "14%",
+              "filter": false
+            },
+            {
+              "attr": "name",
+              "type": "text",
+              "title": "personName",
+              "width": "18%",
+              "filter": false
+            },
+            {
+              "attr": "latitudeId",
+              "type": "objectId",
+              "title": "latitudeId",
+              "width": "26%",
+              "filter": false,
+              "customFilter": {
+                "type": "state",
+                "common": {
+                  "type": [
+                    "number",
+                    "string"
+                  ]
+                }
+              }
+            },
+            {
+              "attr": "longitudeId",
+              "type": "objectId",
+              "title": "longitudeId",
+              "width": "26%",
+              "filter": false,
+              "customFilter": {
+                "type": "state",
+                "common": {
+                  "type": [
+                    "number",
+                    "string"
+                  ]
+                }
+              }
+            },
+            {
+              "attr": "homeTravelTimeId",
+              "type": "objectId",
+              "title": "homeTravelTimeId",
+              "width": "28%",
+              "filter": false,
+              "customFilter": {
+                "type": "state",
+                "common": {
+                  "type": "number"
+                }
+              }
+            }
+          ]
+        },
+        "peopleHelp": {
+          "type": "staticText",
+          "text": "peopleHelp",
+          "sm": 12
+        }
+      }
+    },
+    "placesTab": {
+      "type": "panel",
+      "label": "placesTab",
+      "items": {
+        "placesIntro": {
+          "type": "staticText",
+          "text": "placesIntro",
+          "sm": 12
+        },
+        "places": {
+          "type": "table",
+          "label": "places",
+          "useCardFor": [
+            "xs",
+            "sm"
+          ],
+          "titleAttribute": "name",
+          "showFirstAddOnTop": true,
+          "items": [
+            {
+              "attr": "id",
+              "type": "text",
+              "title": "placeId",
+              "width": "14%",
+              "filter": false
+            },
+            {
+              "attr": "name",
+              "type": "text",
+              "title": "placeName",
+              "width": "18%",
+              "filter": false
+            },
+            {
+              "attr": "latitude",
+              "type": "number",
+              "title": "latitude",
+              "width": "15%",
+              "filter": false
+            },
+            {
+              "attr": "longitude",
+              "type": "number",
+              "title": "longitude",
+              "width": "15%",
+              "filter": false
+            },
+            {
+              "attr": "radius",
+              "type": "number",
+              "title": "radius",
+              "width": "16%",
+              "filter": false,
+              "default": 100
+            },
+            {
+              "attr": "isHome",
+              "type": "checkbox",
+              "title": "isHome",
+              "width": "12%",
+              "filter": false,
+              "default": false
+            }
+          ]
+        },
+        "placesHelp": {
+          "type": "staticText",
+          "text": "placesHelp",
+          "sm": 12
+        }
+      }
+    },
+    "routingTab": {
+      "type": "panel",
+      "label": "routingTab",
+      "items": {
+        "routingIntro": {
+          "type": "staticText",
+          "text": "routingIntro",
+          "sm": 12
+        },
+        "routingEnabled": {
+          "type": "checkbox",
+          "label": "routingEnabled",
+          "default": true,
+          "sm": 12
+        },
+        "routingUrl": {
+          "type": "text",
+          "label": "routingUrl",
+          "default": "https://router.project-osrm.org",
+          "sm": 8
+        },
+        "updateIntervalMinutes": {
+          "type": "number",
+          "label": "updateIntervalMinutes",
+          "min": 1,
+          "max": 1440,
+          "step": 1,
+          "unit": "min",
+          "default": 5,
+          "sm": 4
+        },
+        "routingHelp": {
+          "type": "staticText",
+          "text": "routingHelp",
+          "sm": 12
+        }
+      }
+    },
+    "helpTab": {
+      "type": "panel",
+      "label": "helpTab",
+      "items": {
+        "helpIntro": {
+          "type": "staticText",
+          "text": "helpIntro",
+          "sm": 12
+        },
+        "helpPrivacy": {
+          "type": "staticText",
+          "text": "helpPrivacy",
+          "sm": 12
+        }
+      }
+    }
+  }
+}
