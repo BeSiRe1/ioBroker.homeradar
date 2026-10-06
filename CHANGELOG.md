@@ -1,7 +1,16 @@
 # Changelog
 
+## 0.2.0 (2026-10-06)
+
+- Remove the duplicate `travelTimes.home` branch; home travel metrics now use the configured home entry under `travelTimes.places.<placeId>`.
+
+## 0.1.2 (2026-10-06)
+
+- Display travel-time datapoints as numeric minute intervals and migrate existing datapoint roles at startup.
+
 ## 0.1.1 (2026-10-06)
 
+- Clarify that OSRM route distances follow the fastest route and may not be the shortest road distance.
 - Fix loading people and places when ioBroker stores populated lists in the root configuration alongside empty tab defaults.
 
 ## 0.1.0 (2026-10-05)

@@ -39,17 +39,15 @@ persons.<personId>
 ├─ places.<placeId>
 │  ├─ inside                 whether the person is within the place radius
 │  └─ distance               straight-line distance in meters
-├─ travelTimes.places.<placeId>
-│  ├─ minutes                estimated driving time to the configured place
-│  ├─ distance               route length to the configured place in kilometers
-│  └─ status                 route calculation or cache status
-└─ travelTimes.home
-   ├─ minutes                estimated driving time home
-   ├─ distance               route length home in kilometers
-   └─ status                 route calculation status
+└─ travelTimes.places.<placeId>
+   ├─ minutes                estimated driving time to the configured place
+   ├─ distance               route length to the configured place in kilometers
+   └─ status                 route calculation or cache status
 ```
 
-The `travelTimes.places.<placeId>` states include every configured place, including home. `travelTimes.home` remains the dedicated travel-time-to-home output. An initial matrix is queried per person at startup. After a successful request, the matrix is reused until that person's location changes by at least 30 meters from the last successful matrix query. If a matrix request fails and the person is inside a configured place with both fallback values set, the adapter uses that place's fallback distance and travel time in `travelTimes.home`. After a failed request, HomeRadar retries during the next configured update cycle.
+The `travelTimes.places.<placeId>` states include every configured place, including home; there is no separate home travel-time branch. When a person is within the home radius, the home entry is set to zero locally. An initial matrix is queried per person at startup. After a successful request, the matrix is reused until that person's location changes by at least 30 meters from the last successful matrix query. If a matrix request fails and the person is inside a configured place with both fallback values set, the adapter uses that place's fallback distance and travel time in the configured home-place entry. After a failed request, HomeRadar retries during the next configured update cycle.
+
+The route distances follow the route selected by the routing service. With the public OSRM table service, this is the fastest route and not necessarily the shortest road route. The distance and travel time therefore describe the same fastest route.
 
 Presence and straight-line distance calculations are local. Matrix requests send the person's current coordinates and the configured place coordinates to the routing service.
 
@@ -135,17 +133,15 @@ persons.<personId>
 ├─ places.<placeId>
 │  ├─ inside                 Person befindet sich innerhalb des Ortsradius
 │  └─ distance               Luftlinienentfernung in Metern
-├─ travelTimes.places.<placeId>
-│  ├─ minutes                geschätzte Fahrzeit zum konfigurierten Ort
-│  ├─ distance               Streckenlänge zum konfigurierten Ort in Kilometern
-│  └─ status                 Status der Routenberechnung oder des Caches
-└─ travelTimes.home
-   ├─ minutes                geschätzte Fahrzeit nach Hause
-   ├─ distance               Streckenlänge nach Hause in Kilometern
-   └─ status                 Status der Routenberechnung
+└─ travelTimes.places.<placeId>
+   ├─ minutes                geschätzte Fahrzeit zum konfigurierten Ort
+   ├─ distance               Streckenlänge zum konfigurierten Ort in Kilometern
+   └─ status                 Status der Routenberechnung oder des Caches
 ```
 
-`travelTimes.places.<placeId>` enthält alle konfigurierten Orte einschließlich Zuhause. `travelTimes.home` bleibt der eigene Datenpunkt für die Fahrzeit nach Hause. Beim Start wird pro Person eine Matrix für alle Ziele angefragt. Nach einer erfolgreichen Anfrage wird sie wiederverwendet, bis sich der Standort um mindestens 30 Meter vom letzten erfolgreichen Matrixaufruf entfernt hat. Schlägt eine Matrixanfrage fehl und befindet sich die Person innerhalb eines konfigurierten Orts mit beiden eingetragenen Fallback-Werten, verwendet der Adapter Entfernung und Fahrzeit dieses Orts in `travelTimes.home`. Nach einem Fehler versucht HomeRadar es im nächsten Aktualisierungszyklus erneut.
+`travelTimes.places.<placeId>` enthält alle konfigurierten Orte einschließlich Zuhause; einen zusätzlichen Reisezeiten-Zweig für Zuhause gibt es nicht. Befindet sich eine Person innerhalb des Zuhause-Radius, werden die Werte für Zuhause lokal auf null gesetzt. Beim Start wird pro Person eine Matrix für alle Ziele angefragt. Nach einer erfolgreichen Anfrage wird sie wiederverwendet, bis sich der Standort um mindestens 30 Meter vom letzten erfolgreichen Matrixaufruf entfernt hat. Schlägt eine Matrixanfrage fehl und befindet sich die Person innerhalb eines konfigurierten Orts mit beiden eingetragenen Fallback-Werten, verwendet der Adapter Entfernung und Fahrzeit dieses Orts im Eintrag des konfigurierten Zuhause-Orts. Nach einem Fehler versucht HomeRadar es im nächsten Aktualisierungszyklus erneut.
+
+Die Streckenlängen folgen der vom Routingdienst ausgewählten Route. Beim öffentlichen OSRM-Tabellendienst ist das die schnellste Route und nicht zwingend die kürzeste Straßenstrecke. Entfernung und Fahrzeit beziehen sich damit auf dieselbe schnellste Route.
 
 Anwesenheit und Luftlinienentfernungen werden lokal berechnet. Für Matrixanfragen sendet der Adapter die aktuellen Koordinaten der Person und die Koordinaten der konfigurierten Orte an den Routingdienst.
 
