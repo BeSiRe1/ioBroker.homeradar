@@ -74,6 +74,8 @@
     }
   ],
   "native": {
+    "useGeoapifyRoutingFallback": false,
+    "useGeoapifyAddressLookup": false,
     "peopleTab": {
       "people": []
     },
@@ -84,7 +86,7 @@
       "routingEnabled": true,
       "routingUrl": "https://router.project-osrm.org",
       "useGeoapifyRoutingFallback": false,
-      "useGeoapifyAddressLookup": true,
+      "useGeoapifyAddressLookup": false,
       "geoapifyApiKey": ""
     }
   }

@@ -2,6 +2,10 @@
 
 ## 0.2.1 (2026-10-06)
 
+- Present all instance settings on one page with blue section headers instead of separate tabs.
+- Place the Geoapify address lookup and routing fallback options side by side, with address lookup first.
+- Clarify that the Geoapify routing fallback applies to travel times.
+- Set both Geoapify options to off by default at the root and in the routing settings.
 - Add independent options to enable Geoapify routing fallback and address lookup separately.
 - Remove the shared aggregate address JSON datapoint; keep address responses per person.
 - Create individual datapoints for address components such as name, street, house number, district, and postal code; omit technical result metadata.

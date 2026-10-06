@@ -428,7 +428,7 @@ class HomeRadarAdapter extends utils.Adapter {
     }
 
     async updatePersonAddress(person, coordinates) {
-        if (!this.getConfigValue('routingTab', 'useGeoapifyAddressLookup', true)) return;
+        if (!this.getConfigValue('routingTab', 'useGeoapifyAddressLookup', false)) return;
         const apiKey = String(this.getConfigValue('routingTab', 'geoapifyApiKey', '') || '').trim();
         if (!apiKey) return;
         const cached = this.addressCache.get(person.id);

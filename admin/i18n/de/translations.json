@@ -24,7 +24,7 @@
   "routingIntro": "Fahrzeiten sind optional. Beim Start prüft HomeRadar alle Personen einmal; danach wird nur die Person aktualisiert, deren Koordinaten sich ändern. Die Routenmatrix jeder Person wird bis zu einer Standortänderung von mindestens 30 Metern wiederverwendet. Nach einem Fehler erfolgt der nächste Versuch bei einer Koordinatenänderung oder beim Neustart des Adapters.",
   "routingEnabled": "Fahrzeiten berechnen",
   "routingUrl": "OSRM-Serveradresse",
-  "useGeoapifyRoutingFallback": "Geoapify bei OSRM-Ausfall verwenden",
+  "useGeoapifyRoutingFallback": "Geoapify bei OSRM-Ausfall verwenden (Reisezeiten)",
   "useGeoapifyAddressLookup": "Adressen mit Geoapify auflösen",
   "geoapifyApiKey": "Geoapify-API-Schlüssel (Adressen und Routing-Fallback)",
   "routingHelp": "Beim Start werden alle Personen einmal geprüft. Danach wird nur die Person aktualisiert, deren Koordinaten sich ändern. Aktiviere die beiden Geoapify-Optionen unabhängig voneinander, um den Dienst als OSRM-Fallback, zur Adressauflösung oder für beides zu verwenden. Adressen werden bis zu einer Standortänderung von 30 Metern wiederverwendet. Erstelle ein kostenloses Geoapify-Projekt und kopiere den API-Schlüssel aus myprojects.geoapify.com. Der kostenlose Tarif umfasst derzeit 3.000 Credits pro Tag; eine Adressabfrage kostet einen Credit, eine Matrix verbraucht abhängig von der Anzahl ihrer Start- und Zielpunkte Credits. Weder Geoapify noch der öffentliche OSRM-Demodienst garantieren die Verfügbarkeit; der öffentliche OSRM-Demodienst bietet keine Live-Verkehrsdaten.",

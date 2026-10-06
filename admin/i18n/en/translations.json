@@ -24,7 +24,7 @@
   "routingIntro": "Travel-time calculation is optional. All people are checked once at startup; afterwards, only the person whose coordinates change is updated. Each person's route matrix is reused until the location changes by at least 30 meters. After an error, HomeRadar retries on the next coordinate change or adapter restart.",
   "routingEnabled": "Calculate travel times",
   "routingUrl": "OSRM server address",
-  "useGeoapifyRoutingFallback": "Use Geoapify if OSRM fails",
+  "useGeoapifyRoutingFallback": "Use Geoapify if OSRM fails (travel times)",
   "useGeoapifyAddressLookup": "Resolve addresses with Geoapify",
   "geoapifyApiKey": "Geoapify API key (addresses and routing fallback)",
   "routingHelp": "All people are checked once when the adapter starts. Afterwards, only the person whose coordinates change is updated. Enable the two Geoapify options independently to use it for OSRM fallback, address lookup, or both. Address results are reused until the location changes by 30 meters. Create a free Geoapify project and copy its API key from myprojects.geoapify.com. Geoapify's free plan currently includes 3,000 credits per day; a reverse-geocoding request costs one credit and a matrix costs credits based on its source and target count. Neither Geoapify nor the public OSRM demo provides guaranteed availability; the public OSRM demo has no live traffic data.",
