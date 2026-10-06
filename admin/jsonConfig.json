@@ -190,16 +190,17 @@
           "default": "https://router.project-osrm.org",
           "sm": 8
         },
-        "useOpenRouteServiceFallback": {
+        "useGeoapifyRoutingFallback": {
           "type": "checkbox",
-          "label": "useOpenRouteServiceFallback",
+          "label": "useGeoapifyRoutingFallback",
           "default": false,
           "sm": 12
         },
-        "openRouteServiceApiKey": {
-          "type": "password",
-          "label": "openRouteServiceApiKey",
-          "sm": 8
+        "useGeoapifyAddressLookup": {
+          "type": "checkbox",
+          "label": "useGeoapifyAddressLookup",
+          "default": true,
+          "sm": 12
         },
         "geoapifyApiKey": {
           "type": "password",

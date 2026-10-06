@@ -64,6 +64,7 @@ class HomeRadarAdapter extends utils.Adapter {
         if (nestedValue === '' && typeof rootValue === 'string' && rootValue.trim() !== '') {
             return rootValue;
         }
+        if (hasRootValue && typeof rootValue === 'boolean') return rootValue;
         if (hasNestedValue) return nestedValue;
         if (hasRootValue) return rootValue;
         return fallback;
@@ -206,6 +207,7 @@ class HomeRadarAdapter extends utils.Adapter {
     }
 
     async createOutputTree() {
+        await this.delObjectAsync('summary.addresses', { recursive: true });
         await this.ensureChannel('summary', 'Anwesenheitsübersicht');
         await this.ensureState('summary.anyoneHome', 'Mindestens eine Person zu Hause', 'boolean', 'indicator');
         await this.ensureState('summary.homeCount', 'Anzahl der Personen zu Hause', 'number', 'value');
@@ -223,10 +225,11 @@ class HomeRadarAdapter extends utils.Adapter {
             await this.ensureState(`persons.${person.id}.location.longitude`, 'Aktueller Längengrad', 'number', 'value.gps.longitude', '°');
             await this.ensureState(`persons.${person.id}.location.openStreetMapUrl`, 'Standort auf OpenStreetMap', 'string', 'text.url');
             await this.ensureChannel(`persons.${person.id}.location.address`, 'Adresse');
-            for (const [field, label] of Object.entries({ formatted: 'Vollständige Adresse', street: 'Straße', houseNumber: 'Hausnummer', postcode: 'Postleitzahl', city: 'Ort', state: 'Bundesland', country: 'Land' })) {
+            for (const [field, label] of Object.entries({ formatted: 'Vollständige Adresse', name: 'Name des Ortes', street: 'Straße', housenumber: 'Hausnummer', postcode: 'Postleitzahl', city: 'Ort', suburb: 'Ortsteil', district: 'Stadtteil', county: 'Landkreis', state: 'Bundesland oder Region', country: 'Land' })) {
                 await this.ensureState(`persons.${person.id}.location.address.${field}`, label, 'string', 'text');
             }
             await this.ensureState(`persons.${person.id}.location.address.status`, 'Status der Adressauflösung', 'string', 'text');
+            await this.ensureState(`persons.${person.id}.location.address.response`, 'Vollständige Geoapify-Antwort (JSON)', 'string', 'text');
             await this.ensureChannel(`persons.${person.id}.presence`, 'Anwesenheit');
             await this.ensureState(`persons.${person.id}.presence.isHome`, 'Ist zu Hause', 'boolean', 'indicator');
             await this.ensureState(`persons.${person.id}.presence.currentPlace`, 'Aktueller Aufenthaltsort', 'string', 'text');
@@ -412,7 +415,7 @@ class HomeRadarAdapter extends utils.Adapter {
             await this.setValue(`${placeTravelBase}.minutes`, Math.round(route.duration / 60));
             await this.setValue(`${placeTravelBase}.distance`, Math.round(route.distance / 100) / 10);
             const cacheLabel = matrix.cached ? 'Zwischengespeichert' : 'OK';
-            const providerLabel = ({ openrouteservice: 'OpenRouteService', geoapify: 'Geoapify' })[matrix.provider] || 'OSRM';
+            const providerLabel = matrix.provider === 'geoapify' ? 'Geoapify' : 'OSRM';
             await this.setValue(`${placeTravelBase}.status`, `${cacheLabel} (${providerLabel})`);
         }
 
@@ -425,6 +428,7 @@ class HomeRadarAdapter extends utils.Adapter {
     }
 
     async updatePersonAddress(person, coordinates) {
+        if (!this.getConfigValue('routingTab', 'useGeoapifyAddressLookup', true)) return;
         const apiKey = String(this.getConfigValue('routingTab', 'geoapifyApiKey', '') || '').trim();
         if (!apiKey) return;
         const cached = this.addressCache.get(person.id);
@@ -442,28 +446,44 @@ class HomeRadarAdapter extends utils.Adapter {
             const response = await fetch(url, { headers: { 'User-Agent': 'ioBroker.homeradar' }, signal: AbortSignal.timeout(15000) });
             if (!response.ok) throw new Error(`Geoapify antwortet mit HTTP ${response.status}`);
             const result = await response.json();
+            const responseJson = JSON.stringify(result);
+            await this.setValue(`persons.${person.id}.location.address.response`, responseJson);
             const properties = result.features?.[0]?.properties;
             if (!properties) {
                 await this.setValue(`persons.${person.id}.location.address.status`, 'Keine Adresse gefunden');
                 return;
             }
-            const values = {
-                formatted: properties.formatted,
-                street: properties.street,
-                houseNumber: properties.housenumber,
-                postcode: properties.postcode,
-                city: properties.city || properties.town || properties.village || properties.suburb,
-                state: properties.state,
-                country: properties.country
-            };
-            for (const [field, value] of Object.entries(values)) {
-                await this.setValue(`persons.${person.id}.location.address.${field}`, String(value || ''));
-            }
+            await this.writeAddressProperties(`persons.${person.id}.location.address`, properties);
             await this.setValue(`persons.${person.id}.location.address.status`, 'OK (Geoapify)');
             this.addressCache.set(person.id, { origin: { ...coordinates } });
         } catch (error) {
             await this.setValue(`persons.${person.id}.location.address.status`, `Fehler: ${error.message || error}`);
             this.log.warn(`Adressauflösung für ${person.name} fehlgeschlagen: ${error.message || error}`);
+        }
+    }
+
+    async writeAddressProperties(parentId, properties) {
+        const germanNames = {
+            address_line1: 'Adresszeile 1', address_line2: 'Adresszeile 2', country_code: 'Ländercode',
+            state_code: 'Bundeslandcode', county_code: 'Landkreiscode',
+            name: 'Name des Ortes', formatted: 'Vollständige Adresse', housenumber: 'Hausnummer',
+            street: 'Straße', postcode: 'Postleitzahl', city: 'Ort', town: 'Stadt', village: 'Dorf',
+            suburb: 'Ortsteil', district: 'Stadtteil', quarter: 'Stadtviertel', neighbourhood: 'Stadtviertel',
+            municipality: 'Gemeinde', county: 'Landkreis', state: 'Bundesland oder Region', country: 'Land'
+        };
+        const addressFields = new Set(Object.keys(germanNames));
+
+        for (const [key, value] of Object.entries(properties)) {
+            if (!addressFields.has(key)) continue;
+            const idPart = this.safeId(key);
+            if (!idPart) continue;
+            const id = `${parentId}.${idPart}`;
+            const name = germanNames[key] || key;
+            const storedValue = Array.isArray(value) ? JSON.stringify(value) : value === null || value === undefined ? '' : value;
+            const type = typeof storedValue === 'number' ? 'number' : typeof storedValue === 'boolean' ? 'boolean' : 'string';
+            const role = type === 'number' ? 'value' : type === 'boolean' ? 'indicator' : 'text';
+            await this.ensureState(id, name, type, role);
+            await this.setValue(id, storedValue);
         }
     }
 
@@ -520,18 +540,10 @@ class HomeRadarAdapter extends utils.Adapter {
             errors.push(`OSRM: ${error.message || error}`);
         }
 
-        if (this.getConfigValue('routingTab', 'useOpenRouteServiceFallback', false)) {
-            const apiKey = String(this.getConfigValue('routingTab', 'openRouteServiceApiKey', '') || '').trim();
-            if (apiKey) {
-                try {
-                    return await this.requestOpenRouteServiceMatrix(origin, destinations, apiKey);
-                } catch (error) {
-                    errors.push(`OpenRouteService: ${error.message || error}`);
-                }
-            }
-        }
-
-        const geoapifyKey = String(this.getConfigValue('routingTab', 'geoapifyApiKey', '') || '').trim();
+        const useGeoapifyFallback = this.getConfigValue('routingTab', 'useGeoapifyRoutingFallback', false);
+        const geoapifyKey = useGeoapifyFallback
+            ? String(this.getConfigValue('routingTab', 'geoapifyApiKey', '') || '').trim()
+            : '';
         if (geoapifyKey) {
             try {
                 return await this.requestGeoapifyMatrix(origin, destinations, geoapifyKey);
@@ -590,38 +602,6 @@ class HomeRadarAdapter extends utils.Adapter {
         };
     }
 
-    async requestOpenRouteServiceMatrix(origin, destinations, apiKey) {
-        const locations = [origin, ...destinations].map(point => [point.longitude, point.latitude]);
-        const response = await fetch('https://api.openrouteservice.org/v2/matrix/driving-car', {
-            method: 'POST',
-            headers: {
-                Authorization: apiKey,
-                'Content-Type': 'application/json',
-                Accept: 'application/json'
-            },
-            body: JSON.stringify({
-                locations,
-                sources: ['0'],
-                destinations: destinations.map((_, index) => String(index + 1)),
-                metrics: ['duration', 'distance'],
-                units: 'm'
-            }),
-            signal: AbortSignal.timeout(15000)
-        });
-        if (!response.ok) throw new Error(`Routingdienst antwortet mit HTTP ${response.status}`);
-
-        const result = await response.json();
-        if (!Array.isArray(result.durations?.[0]) || !Array.isArray(result.distances?.[0])) {
-            throw new Error('Keine gültige Routenmatrix erhalten');
-        }
-        return {
-            provider: 'openrouteservice',
-            routes: destinations.map((_, index) => ({
-                duration: result.durations[0][index],
-                distance: result.distances[0][index]
-            }))
-        };
-    }
 }
 
 if (require.main !== module) {

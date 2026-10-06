@@ -2,6 +2,11 @@
 
 ## 0.2.1 (2026-10-06)
 
+- Add independent options to enable Geoapify routing fallback and address lookup separately.
+- Remove the shared aggregate address JSON datapoint; keep address responses per person.
+- Create individual datapoints for address components such as name, street, house number, district, and postal code; omit technical result metadata.
+- Add one summary JSON datapoint containing the Geoapify responses for all people, keyed by person ID.
+- Store the complete Geoapify response as JSON in an additional per-person datapoint.
 - Read API keys from ioBroker's root configuration when the tab-specific setting is empty.
 - Skip routing requests when a person is home and the only configured destination is home.
 - Update all people at startup and thereafter only the person whose coordinates change; remove the periodic refresh interval.

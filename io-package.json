@@ -53,11 +53,9 @@
     }
   },
   "encryptedNative": [
-    "openRouteServiceApiKey",
     "geoapifyApiKey"
   ],
   "protectedNative": [
-    "openRouteServiceApiKey",
     "geoapifyApiKey"
   ],
   "objects": [],
@@ -85,8 +83,8 @@
     "routingTab": {
       "routingEnabled": true,
       "routingUrl": "https://router.project-osrm.org",
-      "useOpenRouteServiceFallback": false,
-      "openRouteServiceApiKey": "",
+      "useGeoapifyRoutingFallback": false,
+      "useGeoapifyAddressLookup": true,
       "geoapifyApiKey": ""
     }
   }
