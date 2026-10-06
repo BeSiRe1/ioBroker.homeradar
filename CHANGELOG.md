@@ -2,6 +2,11 @@
 
 ## 0.2.1 (2026-10-06)
 
+- Add a composed per-person address line using street, house number, city, and village while omitting missing components.
+- Store travel-time datapoints directly under each person and place, without the intermediate `places` channel.
+- Delete datapoints for people and places that are no longer configured when the adapter starts.
+
+- Fill unavailable or empty address fields with `N/A` instead of leaving them blank.
 - Keep people, places, travel times, and help in separate instance-setting tabs, with larger blue section headings inside each tab.
 
 - Document optional Geoapify address resolution in the README introduction.

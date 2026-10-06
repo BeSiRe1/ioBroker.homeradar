@@ -32,6 +32,7 @@ class HomeRadarAdapter extends utils.Adapter {
         await this.setState('info.connection', false, true);
         this.people = this.loadPeople();
         this.places = this.loadPlaces();
+        await this.cleanupObsoleteObjects();
         await this.createOutputTree();
 
         for (const person of this.people) {
@@ -206,6 +207,42 @@ class HomeRadarAdapter extends utils.Adapter {
         await this.extendObjectAsync(id, { common: { role: 'value', unit: 'min' } });
     }
 
+    async getDirectChildIds(parentId) {
+        const prefix = `${this.namespace}.${parentId}.`;
+        const result = await this.getObjectListAsync({
+            startkey: prefix,
+            endkey: `${prefix}\u9999`
+        });
+        const ids = new Set();
+        for (const row of result?.rows || []) {
+            if (typeof row.id !== 'string' || !row.id.startsWith(prefix)) continue;
+            const childId = row.id.slice(prefix.length).split('.')[0];
+            if (childId) ids.add(childId);
+        }
+        return [...ids];
+    }
+
+    async cleanupObsoleteObjects() {
+        const configuredPersonIds = new Set(this.people.map(person => person.id));
+        const configuredPlaceIds = new Set(this.places.map(place => place.id));
+
+        for (const personId of await this.getDirectChildIds('persons')) {
+            if (!configuredPersonIds.has(personId)) {
+                await this.delObjectAsync(`persons.${personId}`, { recursive: true });
+            }
+        }
+
+        for (const person of this.people) {
+            for (const branch of ['places', 'travelTimes']) {
+                for (const childId of await this.getDirectChildIds(`persons.${person.id}.${branch}`)) {
+                    if (!configuredPlaceIds.has(childId)) {
+                        await this.delObjectAsync(`persons.${person.id}.${branch}.${childId}`, { recursive: true });
+                    }
+                }
+            }
+        }
+    }
+
     async createOutputTree() {
         await this.delObjectAsync('summary.addresses', { recursive: true });
         await this.ensureChannel('summary', 'Anwesenheitsübersicht');
@@ -225,8 +262,12 @@ class HomeRadarAdapter extends utils.Adapter {
             await this.ensureState(`persons.${person.id}.location.longitude`, 'Aktueller Längengrad', 'number', 'value.gps.longitude', '°');
             await this.ensureState(`persons.${person.id}.location.openStreetMapUrl`, 'Standort auf OpenStreetMap', 'string', 'text.url');
             await this.ensureChannel(`persons.${person.id}.location.address`, 'Adresse');
+            await this.ensureState(`persons.${person.id}.location.address.addressLine`, 'Adresszeile', 'string', 'text');
+            await this.setValue(`persons.${person.id}.location.address.addressLine`, 'N/A');
             for (const [field, label] of Object.entries({ formatted: 'Vollständige Adresse', name: 'Name des Ortes', street: 'Straße', housenumber: 'Hausnummer', postcode: 'Postleitzahl', city: 'Ort', suburb: 'Ortsteil', district: 'Stadtteil', county: 'Landkreis', state: 'Bundesland oder Region', country: 'Land' })) {
-                await this.ensureState(`persons.${person.id}.location.address.${field}`, label, 'string', 'text');
+                const addressId = `persons.${person.id}.location.address.${field}`;
+                await this.ensureState(addressId, label, 'string', 'text');
+                await this.setValue(addressId, 'N/A');
             }
             await this.ensureState(`persons.${person.id}.location.address.status`, 'Status der Adressauflösung', 'string', 'text');
             await this.ensureState(`persons.${person.id}.location.address.response`, 'Vollständige Geoapify-Antwort (JSON)', 'string', 'text');
@@ -236,17 +277,15 @@ class HomeRadarAdapter extends utils.Adapter {
             await this.ensureState(`persons.${person.id}.presence.lastUpdate`, 'Letzte Koordinatenprüfung', 'number', 'date', 'ms');
             await this.ensureChannel(`persons.${person.id}.places`, 'Orte');
             await this.ensureChannel(`persons.${person.id}.travelTimes`, 'Reisezeiten');
-            await this.delObjectAsync(`persons.${person.id}.travelTimes.home`, { recursive: true });
-            await this.ensureChannel(`persons.${person.id}.travelTimes.places`, 'Fahrzeiten zu Orten');
 
             for (const place of this.places) {
                 await this.ensureChannel(`persons.${person.id}.places.${place.id}`, place.name);
                 await this.ensureState(`persons.${person.id}.places.${place.id}.inside`, 'Innerhalb des Erkennungsradius', 'boolean', 'indicator');
                 await this.ensureState(`persons.${person.id}.places.${place.id}.distance`, 'Luftlinienentfernung', 'number', 'value.distance', 'm');
-                await this.ensureChannel(`persons.${person.id}.travelTimes.places.${place.id}`, place.name);
-                await this.ensureMinuteState(`persons.${person.id}.travelTimes.places.${place.id}.minutes`, `Fahrzeit zum Ort ${place.name}`);
-                await this.ensureState(`persons.${person.id}.travelTimes.places.${place.id}.distance`, `Streckenlänge zum Ort ${place.name}`, 'number', 'value.distance', 'km');
-                await this.ensureState(`persons.${person.id}.travelTimes.places.${place.id}.status`, `Status der Routenberechnung zum Ort ${place.name}`, 'string', 'text');
+                await this.ensureChannel(`persons.${person.id}.travelTimes.${place.id}`, place.name);
+                await this.ensureMinuteState(`persons.${person.id}.travelTimes.${place.id}.minutes`, `Fahrzeit zum Ort ${place.name}`);
+                await this.ensureState(`persons.${person.id}.travelTimes.${place.id}.distance`, `Streckenlänge zum Ort ${place.name}`, 'number', 'value.distance', 'km');
+                await this.ensureState(`persons.${person.id}.travelTimes.${place.id}.status`, `Status der Routenberechnung zum Ort ${place.name}`, 'string', 'text');
             }
         }
     }
@@ -362,7 +401,7 @@ class HomeRadarAdapter extends utils.Adapter {
             await this.setValue(`${placeBase}.distance`, Math.round(item.distance));
         }
 
-        const homeTravelBase = homePlace ? `persons.${person.id}.travelTimes.places.${homePlace.place.id}` : null;
+        const homeTravelBase = homePlace ? `persons.${person.id}.travelTimes.${homePlace.place.id}` : null;
         if (isHome && homeTravelBase) {
             await this.setValue(`${homeTravelBase}.minutes`, 0);
             await this.setValue(`${homeTravelBase}.distance`, 0);
@@ -372,7 +411,7 @@ class HomeRadarAdapter extends utils.Adapter {
         if (!this.getConfigValue('routingTab', 'routingEnabled', true)) {
             for (const place of this.places) {
                 if (place.isHome && isHome) continue;
-                await this.setValue(`persons.${person.id}.travelTimes.places.${place.id}.status`, 'Routenberechnung deaktiviert');
+                await this.setValue(`persons.${person.id}.travelTimes.${place.id}.status`, 'Routenberechnung deaktiviert');
             }
             return;
         }
@@ -381,7 +420,7 @@ class HomeRadarAdapter extends utils.Adapter {
 
         for (const place of this.places) {
             if (place.isHome && isHome) continue;
-            await this.setValue(`persons.${person.id}.travelTimes.places.${place.id}.status`, 'Wird berechnet');
+            await this.setValue(`persons.${person.id}.travelTimes.${place.id}.status`, 'Wird berechnet');
         }
 
         let matrix;
@@ -397,7 +436,7 @@ class HomeRadarAdapter extends utils.Adapter {
             const place = this.places[index];
             if (place.isHome && isHome) continue;
             const route = matrix?.routes[index];
-            const placeTravelBase = `persons.${person.id}.travelTimes.places.${place.id}`;
+            const placeTravelBase = `persons.${person.id}.travelTimes.${place.id}`;
             if (!route || !Number.isFinite(route.duration) || !Number.isFinite(route.distance)) {
                 const fallbackPlace = currentPlace?.place;
                 const hasHomeFallback = place.isHome && fallbackPlace &&
@@ -450,10 +489,13 @@ class HomeRadarAdapter extends utils.Adapter {
             await this.setValue(`persons.${person.id}.location.address.response`, responseJson);
             const properties = result.features?.[0]?.properties;
             if (!properties) {
+                await this.writeAddressProperties(`persons.${person.id}.location.address`, {});
+                await this.setValue(`persons.${person.id}.location.address.addressLine`, 'N/A');
                 await this.setValue(`persons.${person.id}.location.address.status`, 'Keine Adresse gefunden');
                 return;
             }
             await this.writeAddressProperties(`persons.${person.id}.location.address`, properties);
+            await this.setValue(`persons.${person.id}.location.address.addressLine`, this.formatAddressLine(properties));
             await this.setValue(`persons.${person.id}.location.address.status`, 'OK (Geoapify)');
             this.addressCache.set(person.id, { origin: { ...coordinates } });
         } catch (error) {
@@ -473,18 +515,40 @@ class HomeRadarAdapter extends utils.Adapter {
         };
         const addressFields = new Set(Object.keys(germanNames));
 
+        for (const [key, name] of Object.entries(germanNames)) {
+            const id = `${parentId}.${this.safeId(key)}`;
+            await this.ensureState(id, name, 'string', 'text');
+            await this.setValue(id, 'N/A');
+        }
+
         for (const [key, value] of Object.entries(properties)) {
             if (!addressFields.has(key)) continue;
             const idPart = this.safeId(key);
             if (!idPart) continue;
             const id = `${parentId}.${idPart}`;
             const name = germanNames[key] || key;
-            const storedValue = Array.isArray(value) ? JSON.stringify(value) : value === null || value === undefined ? '' : value;
+            const isEmpty = value === null || value === undefined || value === '' || (typeof value === 'string' && value.trim() === '') || (Array.isArray(value) && value.length === 0);
+            const storedValue = isEmpty ? 'N/A' : Array.isArray(value) ? JSON.stringify(value) : value;
             const type = typeof storedValue === 'number' ? 'number' : typeof storedValue === 'boolean' ? 'boolean' : 'string';
             const role = type === 'number' ? 'value' : type === 'boolean' ? 'indicator' : 'text';
             await this.ensureState(id, name, type, role);
             await this.setValue(id, storedValue);
         }
+    }
+
+    formatAddressLine(properties) {
+        const available = value => {
+            if (value === null || value === undefined) return '';
+            const text = String(value).trim();
+            return !text || text.toUpperCase() === 'N/A' ? '' : text;
+        };
+        const street = available(properties.street);
+        const houseNumber = available(properties.housenumber);
+        const city = available(properties.city);
+        const village = available(properties.village);
+        const streetPart = street ? [street, houseNumber].filter(Boolean).join(' ') : '';
+        const localityPart = [city, village].filter(Boolean).join('-');
+        return [streetPart, localityPart].filter(Boolean).join(', ') || 'N/A';
     }
 
     async getPersonRouteMatrix(person, origin) {
