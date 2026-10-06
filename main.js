@@ -57,8 +57,16 @@ class HomeRadarAdapter extends utils.Adapter {
 
     getConfigValue(section, key, fallback) {
         const nested = this.config[section];
-        if (nested && Object.prototype.hasOwnProperty.call(nested, key)) return nested[key];
-        if (Object.prototype.hasOwnProperty.call(this.config, key)) return this.config[key];
+        const hasNestedValue = nested && Object.prototype.hasOwnProperty.call(nested, key);
+        const hasRootValue = Object.prototype.hasOwnProperty.call(this.config, key);
+        const nestedValue = hasNestedValue ? nested[key] : undefined;
+        const rootValue = hasRootValue ? this.config[key] : undefined;
+
+        if (Array.isArray(rootValue) && rootValue.length > 0 && Array.isArray(nestedValue) && nestedValue.length === 0) {
+            return rootValue;
+        }
+        if (hasNestedValue) return nestedValue;
+        if (hasRootValue) return rootValue;
         return fallback;
     }
 
