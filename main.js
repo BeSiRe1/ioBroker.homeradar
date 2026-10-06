@@ -16,6 +16,8 @@ class HomeRadarAdapter extends utils.Adapter {
         this.activePeople = new Set();
         this.routeCache = new Map();
         this.presenceByPerson = new Map();
+        this.homeSummaryUpdateRunning = false;
+        this.homeSummaryUpdatePending = false;
         this.routeQueue = [];
         this.routeQueueRunning = false;
         this.lastRouteRequestAt = 0;
@@ -234,12 +236,27 @@ class HomeRadarAdapter extends utils.Adapter {
     }
 
     async updateHomeSummary() {
-        const peopleAtHome = this.people
-            .filter(person => this.presenceByPerson.get(person.id) === true)
-            .map(person => person.name);
-        await this.setValue('summary.anyoneHome', peopleAtHome.length > 0);
-        await this.setValue('summary.homeCount', peopleAtHome.length);
-        await this.setValue('summary.peopleAtHome', peopleAtHome.join(', '));
+        if (this.homeSummaryUpdateRunning) {
+            this.homeSummaryUpdatePending = true;
+            return;
+        }
+
+        this.homeSummaryUpdateRunning = true;
+        try {
+            do {
+                this.homeSummaryUpdatePending = false;
+                const peopleAtHome = this.people
+                    .filter(person => this.presenceByPerson.get(person.id) === true)
+                    .map(person => person.name);
+                await Promise.all([
+                    this.setValue('summary.anyoneHome', peopleAtHome.length > 0),
+                    this.setValue('summary.homeCount', peopleAtHome.length),
+                    this.setValue('summary.peopleAtHome', peopleAtHome.join(', '))
+                ]);
+            } while (this.homeSummaryUpdatePending);
+        } finally {
+            this.homeSummaryUpdateRunning = false;
+        }
     }
 
     schedulePersonUpdate(person) {

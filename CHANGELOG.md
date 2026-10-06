@@ -2,6 +2,7 @@
 
 ## 0.1.0 (2026-10-05)
 
+- Serialize home-summary writes so simultaneous person updates cannot leave the aggregate states out of sync.
 - Cache each person's route matrix until their location has moved at least 30 meters from the last successful matrix request.
 - Calculate travel times from each person's current location to all configured places with one OSRM matrix request and an OpenRouteService matrix fallback.
 - Add optional per-place fallback distance and travel time home, used only when online matrix routing fails and the person is inside that place's radius.
