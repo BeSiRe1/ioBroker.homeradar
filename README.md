@@ -12,6 +12,7 @@ For routing and address details, see the [OSRM HTTP API documentation](https://p
 - Show each person's current coordinates and a locally generated OpenStreetMap link.
 - Calculate driving times from each person's current location to all configured places with one bundled matrix request; try OSRM, optional OpenRouteService, then Geoapify when a Geoapify key is configured.
 - Resolve each person's current coordinates to a structured address with Geoapify when its API key is configured; reuse the result until the person moves at least 30 meters.
+- Check all people once at startup, then update only a person whose coordinates change.
 - Cache each person's matrix until their location changes by at least 30 meters.
 - Optionally configure a distance and travel-time fallback from each place to home. These values are only used if online routing fails while a person is detected at that place.
 - Set the travel time home to zero locally when a person is within the home radius; no routing request is needed at home.
@@ -55,7 +56,7 @@ persons.<personId>
    └─ status                 route calculation or cache status
 ```
 
-The `travelTimes.places.<placeId>` states include every configured place, including home; there is no separate home travel-time branch. When a person is within the home radius, the home entry is set to zero locally. An initial matrix is queried per person at startup. After a successful request, the matrix is reused until that person's location changes by at least 30 meters from the last successful matrix query. If a matrix request fails and the person is inside a configured place with both fallback values set, the adapter uses that place's fallback distance and travel time in the configured home-place entry. After a failed request, HomeRadar retries during the next configured update cycle.
+The `travelTimes.places.<placeId>` states include every configured place, including home; there is no separate home travel-time branch. When a person is within the home radius, the home entry is set to zero locally. All people are checked once at startup. Afterwards, only a person whose coordinates change is updated. After a successful request, the matrix is reused until that person's location changes by at least 30 meters from the last successful matrix query. If a matrix request fails and the person is inside a configured place with both fallback values set, the adapter uses that place's fallback distance and travel time in the configured home-place entry. After an error, HomeRadar tries again on the next coordinate change or adapter restart.
 
 The route distances follow the route selected by the routing service. With the public OSRM table service, this is the fastest route and not necessarily the shortest road route. The distance and travel time therefore describe the same fastest route.
 
@@ -70,8 +71,6 @@ The OpenStreetMap link is generated locally; the browser sends the coordinates t
 3. Enable travel time calculation and select an OSRM server. The public OSRM demo server is preconfigured.
 4. OpenRouteService fallback is disabled by default. To use it, enable the fallback option and add an API key as described below.
 5. Enter a Geoapify API key to enable address lookup and Geoapify as the final routing fallback. If OpenRouteService is not enabled or has no key, it is skipped and Geoapify can still be used.
-6. Set the update interval. Coordinate changes trigger an update as well.
-
 No example people, places, personal coordinates, or coordinate datapoint IDs are preconfigured. Add the people and places you want to use in the instance settings.
 
 ## OpenRouteService API key
@@ -127,6 +126,7 @@ Weitere Informationen findest du in der [OSRM-HTTP-API-Dokumentation](https://pr
 - Aktuelle Koordinaten jeder Person und einen lokal erzeugten OpenStreetMap-Link anzeigen.
 - Fahrzeiten vom aktuellen Standort jeder Person zu allen konfigurierten Orten mit einer gebündelten Matrixabfrage berechnen; OSRM, optional OpenRouteService und danach Geoapify verwenden, wenn ein Geoapify-Schlüssel eingetragen ist.
 - Die aktuellen Koordinaten jeder Person mit Geoapify in eine strukturierte Adresse auflösen, wenn ein API-Schlüssel eingetragen ist; das Ergebnis bis zu einer Standortänderung von 30 Metern wiederverwenden.
+- Alle Personen beim Start einmal prüfen und danach nur die Person aktualisieren, deren Koordinaten sich ändern.
 - Die Matrix jeder Person zwischenspeichern, bis sich ihr Standort mindestens 30 Meter verändert hat.
 - Für jeden Ort optional Entfernung und Fahrzeit von dort nach Hause als Fallback hinterlegen. Diese Werte werden nur genutzt, wenn das Online-Routing fehlschlägt und die Person innerhalb des Erkennungsradius dieses Ortes erkannt wird.
 - Die Fahrzeit nach Hause lokal auf null setzen, wenn sich eine Person innerhalb des Zuhause-Radius befindet; dafür wird keine Routenanfrage benötigt.
@@ -170,7 +170,7 @@ persons.<personId>
    └─ status                 Status der Routenberechnung oder des Caches
 ```
 
-`travelTimes.places.<placeId>` enthält alle konfigurierten Orte einschließlich Zuhause; einen zusätzlichen Reisezeiten-Zweig für Zuhause gibt es nicht. Befindet sich eine Person innerhalb des Zuhause-Radius, werden die Werte für Zuhause lokal auf null gesetzt. Beim Start wird pro Person eine Matrix für alle Ziele angefragt. Nach einer erfolgreichen Anfrage wird sie wiederverwendet, bis sich der Standort um mindestens 30 Meter vom letzten erfolgreichen Matrixaufruf entfernt hat. Schlägt eine Matrixanfrage fehl und befindet sich die Person innerhalb eines konfigurierten Orts mit beiden eingetragenen Fallback-Werten, verwendet der Adapter Entfernung und Fahrzeit dieses Orts im Eintrag des konfigurierten Zuhause-Orts. Nach einem Fehler versucht HomeRadar es im nächsten Aktualisierungszyklus erneut.
+`travelTimes.places.<placeId>` enthält alle konfigurierten Orte einschließlich Zuhause; einen zusätzlichen Reisezeiten-Zweig für Zuhause gibt es nicht. Befindet sich eine Person innerhalb des Zuhause-Radius, werden die Werte für Zuhause lokal auf null gesetzt. Beim Start wird jede Person einmal geprüft. Danach wird nur eine Person aktualisiert, wenn sich ihre Koordinaten ändern. Nach einer erfolgreichen Anfrage wird die Matrix wiederverwendet, bis sich der Standort um mindestens 30 Meter vom letzten erfolgreichen Matrixaufruf entfernt hat. Schlägt eine Matrixanfrage fehl und befindet sich die Person innerhalb eines konfigurierten Orts mit beiden eingetragenen Fallback-Werten, verwendet der Adapter Entfernung und Fahrzeit dieses Orts im Eintrag des konfigurierten Zuhause-Orts. Nach einem Fehler versucht HomeRadar es bei der nächsten Koordinatenänderung oder beim nächsten Adapterstart erneut.
 
 Die Streckenlängen folgen der vom Routingdienst ausgewählten Route. Beim öffentlichen OSRM-Tabellendienst ist das die schnellste Route und nicht zwingend die kürzeste Straßenstrecke. Entfernung und Fahrzeit beziehen sich damit auf dieselbe schnellste Route.
 
@@ -185,8 +185,6 @@ Der OpenStreetMap-Link wird lokal erzeugt. Der Browser überträgt die Koordinat
 3. Aktiviere die Fahrzeitberechnung und wähle einen OSRM-Server. Der öffentliche OSRM-Demodienst ist voreingestellt.
 4. Der OpenRouteService-Ausweichdienst ist standardmäßig ausgeschaltet. Aktiviere die Fallback-Option und trage wie unten beschrieben einen API-Schlüssel ein, wenn du ihn verwenden möchtest.
 5. Trage einen Geoapify-API-Schlüssel ein, um die Adressauflösung und Geoapify als letzten Routing-Fallback zu aktivieren. Ist OpenRouteService nicht aktiviert oder fehlt sein Schlüssel, wird dieser übersprungen und Geoapify kann verwendet werden.
-6. Lege das Aktualisierungsintervall fest. Änderungen an den Koordinaten lösen ebenfalls eine Aktualisierung aus.
-
 Es sind keine Beispielpersonen, Orte, persönlichen Koordinaten oder Koordinaten-Datenpunkt-IDs vorbelegt. Lege die gewünschten Personen und Orte in den Instanzeinstellungen an.
 
 ## OpenRouteService-API-Schlüssel

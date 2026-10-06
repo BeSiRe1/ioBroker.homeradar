@@ -87,8 +87,7 @@
       "routingUrl": "https://router.project-osrm.org",
       "useOpenRouteServiceFallback": false,
       "openRouteServiceApiKey": "",
-      "geoapifyApiKey": "",
-      "updateIntervalMinutes": 5
+      "geoapifyApiKey": ""
     }
   }
 }

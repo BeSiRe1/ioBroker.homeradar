@@ -206,16 +206,6 @@
           "label": "geoapifyApiKey",
           "sm": 8
         },
-        "updateIntervalMinutes": {
-          "type": "number",
-          "label": "updateIntervalMinutes",
-          "min": 1,
-          "max": 1440,
-          "step": 1,
-          "unit": "min",
-          "default": 5,
-          "sm": 4
-        },
         "routingHelp": {
           "type": "staticText",
           "text": "routingHelp",

@@ -2,6 +2,9 @@
 
 ## 0.2.1 (2026-10-06)
 
+- Read API keys from ioBroker's root configuration when the tab-specific setting is empty.
+- Skip routing requests when a person is home and the only configured destination is home.
+- Update all people at startup and thereafter only the person whose coordinates change; remove the periodic refresh interval.
 - Add Geoapify reverse geocoding for current person locations and as the final optional routing fallback.
 - Use the generic numeric role for travel-time values to prevent Admin from formatting minute counts as dates.
 
@@ -32,3 +35,5 @@
 - Remove the optional external home travel time output; travel times are available in HomeRadar's own datapoints.
 - Add OpenRouteService as a fallback for route requests when OSRM fails; configure the API key in the instance settings.
 - Initial development version with configurable people and places, presence detection, and optional OSRM travel time home.
+
+

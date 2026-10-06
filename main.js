@@ -43,11 +43,6 @@ class HomeRadarAdapter extends utils.Adapter {
 
         await this.setState('info.connection', true, true);
         for (const person of this.people) this.schedulePersonUpdate(person);
-
-        const intervalMinutes = Math.max(1, Number(this.getConfigValue('routingTab', 'updateIntervalMinutes', 5)) || 5);
-        this.refreshTimer = this.setInterval(() => {
-            for (const person of this.people) this.schedulePersonUpdate(person);
-        }, intervalMinutes * 60 * 1000);
     }
 
     onStateChange(id, state) {
@@ -66,13 +61,15 @@ class HomeRadarAdapter extends utils.Adapter {
         if (Array.isArray(rootValue) && rootValue.length > 0 && Array.isArray(nestedValue) && nestedValue.length === 0) {
             return rootValue;
         }
+        if (nestedValue === '' && typeof rootValue === 'string' && rootValue.trim() !== '') {
+            return rootValue;
+        }
         if (hasNestedValue) return nestedValue;
         if (hasRootValue) return rootValue;
         return fallback;
     }
 
     onUnload(callback) {
-        if (this.refreshTimer) this.clearInterval(this.refreshTimer);
         callback();
     }
 
@@ -377,6 +374,7 @@ class HomeRadarAdapter extends utils.Adapter {
             return;
         }
         if (!this.places.length) return;
+        if (isHome && this.places.every(place => place.isHome)) return;
 
         for (const place of this.places) {
             if (place.isHome && isHome) continue;
