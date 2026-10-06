@@ -1,258 +1,282 @@
 {
   "i18n": true,
-  "type": "panel",
+  "type": "tabs",
   "items": {
-    "_peopleTabHeader": {
-      "type": "header",
-      "text": "peopleTab",
-      "size": 5,
-      "sm": 12,
-      "style": {
-        "backgroundColor": "#4da9f5",
-        "color": "#ffffff",
-        "padding": "6px 8px",
-        "borderRadius": "4px"
-      }
-    },
-    "peopleIntro": {
-      "type": "staticText",
-      "text": "peopleIntro",
-      "sm": 12
-    },
-    "people": {
-      "type": "table",
-      "label": "people",
-      "useCardFor": [
-        "xs",
-        "sm"
-      ],
-      "titleAttribute": "name",
-      "showFirstAddOnTop": true,
-      "items": [
-        {
-          "attr": "id",
-          "type": "text",
-          "title": "personId",
-          "width": "14%",
-          "filter": false
-        },
-        {
-          "attr": "name",
-          "type": "text",
-          "title": "personName",
-          "width": "18%",
-          "filter": false
-        },
-        {
-          "attr": "latitudeId",
-          "type": "objectId",
-          "title": "latitudeId",
-          "width": "26%",
-          "filter": false,
-          "customFilter": {
-            "type": "state",
-            "common": {
-              "type": [
-                "number",
-                "string"
-              ]
-            }
+    "peopleTab": {
+      "type": "panel",
+      "label": "peopleTab",
+      "items": {
+        "_peopleTabHeader": {
+          "type": "header",
+          "text": "peopleTab",
+          "size": 3,
+          "sm": 12,
+          "style": {
+            "backgroundColor": "#4da9f5",
+            "color": "#ffffff",
+            "padding": "8px 10px",
+            "borderRadius": "4px"
           }
         },
-        {
-          "attr": "longitudeId",
-          "type": "objectId",
-          "title": "longitudeId",
-          "width": "26%",
-          "filter": false,
-          "customFilter": {
-            "type": "state",
-            "common": {
-              "type": [
-                "number",
-                "string"
-              ]
+        "peopleIntro": {
+          "type": "staticText",
+          "text": "peopleIntro",
+          "sm": 12
+        },
+        "people": {
+          "type": "table",
+          "label": "people",
+          "useCardFor": [
+            "xs",
+            "sm"
+          ],
+          "titleAttribute": "name",
+          "showFirstAddOnTop": true,
+          "items": [
+            {
+              "attr": "id",
+              "type": "text",
+              "title": "personId",
+              "width": "14%",
+              "filter": false
+            },
+            {
+              "attr": "name",
+              "type": "text",
+              "title": "personName",
+              "width": "18%",
+              "filter": false
+            },
+            {
+              "attr": "latitudeId",
+              "type": "objectId",
+              "title": "latitudeId",
+              "width": "26%",
+              "filter": false,
+              "customFilter": {
+                "type": "state",
+                "common": {
+                  "type": [
+                    "number",
+                    "string"
+                  ]
+                }
+              }
+            },
+            {
+              "attr": "longitudeId",
+              "type": "objectId",
+              "title": "longitudeId",
+              "width": "26%",
+              "filter": false,
+              "customFilter": {
+                "type": "state",
+                "common": {
+                  "type": [
+                    "number",
+                    "string"
+                  ]
+                }
+              }
             }
-          }
+          ]
+        },
+        "peopleHelp": {
+          "type": "staticText",
+          "text": "peopleHelp",
+          "sm": 12
         }
-      ]
-    },
-    "peopleHelp": {
-      "type": "staticText",
-      "text": "peopleHelp",
-      "sm": 12
-    },
-    "_placesTabHeader": {
-      "type": "header",
-      "text": "placesTab",
-      "size": 5,
-      "sm": 12,
-      "style": {
-        "backgroundColor": "#4da9f5",
-        "color": "#ffffff",
-        "padding": "6px 8px",
-        "borderRadius": "4px"
       }
     },
-    "placesIntro": {
-      "type": "staticText",
-      "text": "placesIntro",
-      "sm": 12
+    "placesTab": {
+      "type": "panel",
+      "label": "placesTab",
+      "items": {
+        "_placesTabHeader": {
+          "type": "header",
+          "text": "placesTab",
+          "size": 3,
+          "sm": 12,
+          "style": {
+            "backgroundColor": "#4da9f5",
+            "color": "#ffffff",
+            "padding": "8px 10px",
+            "borderRadius": "4px"
+          }
+        },
+        "placesIntro": {
+          "type": "staticText",
+          "text": "placesIntro",
+          "sm": 12
+        },
+        "places": {
+          "type": "table",
+          "label": "places",
+          "useCardFor": [
+            "xs",
+            "sm"
+          ],
+          "titleAttribute": "name",
+          "showFirstAddOnTop": true,
+          "items": [
+            {
+              "attr": "id",
+              "type": "text",
+              "title": "placeId",
+              "width": "12%",
+              "filter": false
+            },
+            {
+              "attr": "name",
+              "type": "text",
+              "title": "placeName",
+              "width": "12%",
+              "filter": false
+            },
+            {
+              "attr": "latitude",
+              "type": "number",
+              "title": "latitude",
+              "width": "12%",
+              "filter": false
+            },
+            {
+              "attr": "longitude",
+              "type": "number",
+              "title": "longitude",
+              "width": "12%",
+              "filter": false
+            },
+            {
+              "attr": "radius",
+              "type": "number",
+              "title": "radius",
+              "width": "11%",
+              "filter": false,
+              "default": 100
+            },
+            {
+              "attr": "fallbackHomeDistanceKm",
+              "type": "number",
+              "title": "fallbackHomeDistanceKm",
+              "width": "15%",
+              "filter": false,
+              "min": 0,
+              "step": 0.1
+            },
+            {
+              "attr": "fallbackHomeMinutes",
+              "type": "number",
+              "title": "fallbackHomeMinutes",
+              "width": "14%",
+              "filter": false,
+              "min": 0,
+              "step": 1
+            },
+            {
+              "attr": "isHome",
+              "type": "checkbox",
+              "title": "isHome",
+              "width": "10%",
+              "filter": false,
+              "default": false,
+              "onChange": {
+                "calculateFunc": "if (data.isHome) { globalData.places.forEach((place, index) => { if (index !== arrayIndex) place.isHome = false; }); } return data.isHome;"
+              }
+            }
+          ]
+        },
+        "placesHelp": {
+          "type": "staticText",
+          "text": "placesHelp",
+          "sm": 12
+        }
+      }
     },
-    "places": {
-      "type": "table",
-      "label": "places",
-      "useCardFor": [
-        "xs",
-        "sm"
-      ],
-      "titleAttribute": "name",
-      "showFirstAddOnTop": true,
-      "items": [
-        {
-          "attr": "id",
-          "type": "text",
-          "title": "placeId",
-          "width": "12%",
-          "filter": false
+    "routingTab": {
+      "type": "panel",
+      "label": "routingTab",
+      "items": {
+        "_routingTabHeader": {
+          "type": "header",
+          "text": "routingTab",
+          "size": 3,
+          "sm": 12,
+          "style": {
+            "backgroundColor": "#4da9f5",
+            "color": "#ffffff",
+            "padding": "8px 10px",
+            "borderRadius": "4px"
+          }
         },
-        {
-          "attr": "name",
-          "type": "text",
-          "title": "placeName",
-          "width": "12%",
-          "filter": false
+        "routingIntro": {
+          "type": "staticText",
+          "text": "routingIntro",
+          "sm": 12
         },
-        {
-          "attr": "latitude",
-          "type": "number",
-          "title": "latitude",
-          "width": "12%",
-          "filter": false
-        },
-        {
-          "attr": "longitude",
-          "type": "number",
-          "title": "longitude",
-          "width": "12%",
-          "filter": false
-        },
-        {
-          "attr": "radius",
-          "type": "number",
-          "title": "radius",
-          "width": "11%",
-          "filter": false,
-          "default": 100
-        },
-        {
-          "attr": "fallbackHomeDistanceKm",
-          "type": "number",
-          "title": "fallbackHomeDistanceKm",
-          "width": "15%",
-          "filter": false,
-          "min": 0,
-          "step": 0.1
-        },
-        {
-          "attr": "fallbackHomeMinutes",
-          "type": "number",
-          "title": "fallbackHomeMinutes",
-          "width": "14%",
-          "filter": false,
-          "min": 0,
-          "step": 1
-        },
-        {
-          "attr": "isHome",
+        "routingEnabled": {
           "type": "checkbox",
-          "title": "isHome",
-          "width": "10%",
-          "filter": false,
+          "label": "routingEnabled",
+          "default": true,
+          "sm": 12
+        },
+        "routingUrl": {
+          "type": "text",
+          "label": "routingUrl",
+          "default": "https://router.project-osrm.org",
+          "sm": 8
+        },
+        "useGeoapifyAddressLookup": {
+          "type": "checkbox",
+          "label": "useGeoapifyAddressLookup",
           "default": false,
-          "onChange": {
-            "calculateFunc": "if (data.isHome) { globalData.places.forEach((place, index) => { if (index !== arrayIndex) place.isHome = false; }); } return data.isHome;"
-          }
+          "sm": 6
+        },
+        "useGeoapifyRoutingFallback": {
+          "type": "checkbox",
+          "label": "useGeoapifyRoutingFallback",
+          "default": false,
+          "sm": 6
+        },
+        "geoapifyApiKey": {
+          "type": "password",
+          "label": "geoapifyApiKey",
+          "sm": 8
+        },
+        "routingHelp": {
+          "type": "staticText",
+          "text": "routingHelp",
+          "sm": 12
         }
-      ]
-    },
-    "placesHelp": {
-      "type": "staticText",
-      "text": "placesHelp",
-      "sm": 12
-    },
-    "_routingTabHeader": {
-      "type": "header",
-      "text": "routingTab",
-      "size": 5,
-      "sm": 12,
-      "style": {
-        "backgroundColor": "#4da9f5",
-        "color": "#ffffff",
-        "padding": "6px 8px",
-        "borderRadius": "4px"
       }
     },
-    "routingIntro": {
-      "type": "staticText",
-      "text": "routingIntro",
-      "sm": 12
-    },
-    "routingEnabled": {
-      "type": "checkbox",
-      "label": "routingEnabled",
-      "default": true,
-      "sm": 12
-    },
-    "routingUrl": {
-      "type": "text",
-      "label": "routingUrl",
-      "default": "https://router.project-osrm.org",
-      "sm": 8
-    },
-    "useGeoapifyAddressLookup": {
-      "type": "checkbox",
-      "label": "useGeoapifyAddressLookup",
-      "default": false,
-      "sm": 6
-    },
-    "useGeoapifyRoutingFallback": {
-      "type": "checkbox",
-      "label": "useGeoapifyRoutingFallback",
-      "default": false,
-      "sm": 6
-    },
-    "geoapifyApiKey": {
-      "type": "password",
-      "label": "geoapifyApiKey",
-      "sm": 8
-    },
-    "routingHelp": {
-      "type": "staticText",
-      "text": "routingHelp",
-      "sm": 12
-    },
-    "_helpTabHeader": {
-      "type": "header",
-      "text": "helpTab",
-      "size": 5,
-      "sm": 12,
-      "style": {
-        "backgroundColor": "#4da9f5",
-        "color": "#ffffff",
-        "padding": "6px 8px",
-        "borderRadius": "4px"
+    "helpTab": {
+      "type": "panel",
+      "label": "helpTab",
+      "items": {
+        "_helpTabHeader": {
+          "type": "header",
+          "text": "helpTab",
+          "size": 3,
+          "sm": 12,
+          "style": {
+            "backgroundColor": "#4da9f5",
+            "color": "#ffffff",
+            "padding": "8px 10px",
+            "borderRadius": "4px"
+          }
+        },
+        "helpIntro": {
+          "type": "staticText",
+          "text": "helpIntro",
+          "sm": 12
+        },
+        "helpPrivacy": {
+          "type": "staticText",
+          "text": "helpPrivacy",
+          "sm": 12
+        }
       }
-    },
-    "helpIntro": {
-      "type": "staticText",
-      "text": "helpIntro",
-      "sm": 12
-    },
-    "helpPrivacy": {
-      "type": "staticText",
-      "text": "helpPrivacy",
-      "sm": 12
     }
   }
 }
