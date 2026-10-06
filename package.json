@@ -4,6 +4,10 @@
   "description": "Personen, Orte und Reisezeiten für ioBroker",
   "author": "HomeRadar contributors",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/BeSiRe1/ioBroker.homeradar.git"
+  },
   "main": "main.js",
   "engines": {
     "node": ">=20"

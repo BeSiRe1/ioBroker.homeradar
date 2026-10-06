@@ -45,6 +45,7 @@
     ],
     "readme": "README.md",
     "icon": "homeradar.png",
+    "extIcon": "https://raw.githubusercontent.com/BeSiRe1/ioBroker.homeradar/main/admin/homeradar.png",
     "news": {
       "NEXT": {
         "en": "Added current-location map links, home presence summary, cached route matrices to places, and optional per-place home-route fallbacks.",
