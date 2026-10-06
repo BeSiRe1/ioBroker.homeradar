@@ -1,6 +1,6 @@
 # HomeRadar for ioBroker
 
-HomeRadar detects locally whether configured people are at home or at other frequently visited places. It can optionally calculate driving times from each person's current location to all configured places using public routing services.
+HomeRadar detects locally whether configured people are at home or at other frequently visited places. It can optionally calculate driving times from each person's current location to all configured places using public routing services. When enabled, Geoapify can also resolve each person's current coordinates into an address.
 
 For routing and address details, see the [OSRM HTTP API documentation](https://project-osrm.org/docs/v26.4.0/http) and Geoapify documentation for [route matrices](https://apidocs.geoapify.com/docs/route-matrix/) and [reverse geocoding](https://apidocs.geoapify.com/docs/geocoding/reverse-geocoding/).
 
@@ -100,7 +100,7 @@ MIT. See [LICENSE](LICENSE).
 
 # HomeRadar für ioBroker
 
-HomeRadar erkennt lokal, ob sich konfigurierte Personen zu Hause oder an anderen häufig besuchten Orten befinden. Über öffentliche Routingdienste berechnet der Adapter optional Fahrzeiten vom aktuellen Standort jeder Person zu allen konfigurierten Orten.
+HomeRadar erkennt lokal, ob sich konfigurierte Personen zu Hause oder an anderen häufig besuchten Orten befinden. Über öffentliche Routingdienste berechnet der Adapter optional Fahrzeiten vom aktuellen Standort jeder Person zu allen konfigurierten Orten. Wenn aktiviert, kann Geoapify außerdem die aktuellen Koordinaten jeder Person in eine Adresse auflösen.
 
 Weitere Informationen findest du in der [OSRM-HTTP-API-Dokumentation](https://project-osrm.org/docs/v26.4.0/http) sowie in der Geoapify-Dokumentation für [Routenmatrizen](https://apidocs.geoapify.com/docs/route-matrix/) und [Adressauflösung](https://apidocs.geoapify.com/docs/geocoding/reverse-geocoding/).
 

@@ -2,6 +2,8 @@
 
 ## 0.2.1 (2026-10-06)
 
+- Document optional Geoapify address resolution in the README introduction.
+
 - Present all instance settings on one page with blue section headers instead of separate tabs.
 - Place the Geoapify address lookup and routing fallback options side by side, with address lookup first.
 - Clarify that the Geoapify routing fallback applies to travel times.
