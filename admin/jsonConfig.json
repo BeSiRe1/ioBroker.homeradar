@@ -201,6 +201,11 @@
           "label": "openRouteServiceApiKey",
           "sm": 8
         },
+        "geoapifyApiKey": {
+          "type": "password",
+          "label": "geoapifyApiKey",
+          "sm": 8
+        },
         "updateIntervalMinutes": {
           "type": "number",
           "label": "updateIntervalMinutes",

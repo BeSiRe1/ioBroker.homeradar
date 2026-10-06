@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.1 (2026-10-06)
+
+- Add Geoapify reverse geocoding for current person locations and as the final optional routing fallback.
+- Use the generic numeric role for travel-time values to prevent Admin from formatting minute counts as dates.
+
 ## 0.2.0 (2026-10-06)
 
 - Remove the duplicate `travelTimes.home` branch; home travel metrics now use the configured home entry under `travelTimes.places.<placeId>`.

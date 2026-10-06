@@ -15,6 +15,7 @@ class HomeRadarAdapter extends utils.Adapter {
         this.pendingPeople = new Set();
         this.activePeople = new Set();
         this.routeCache = new Map();
+        this.addressCache = new Map();
         this.presenceByPerson = new Map();
         this.homeSummaryUpdateRunning = false;
         this.homeSummaryUpdatePending = false;
@@ -202,6 +203,11 @@ class HomeRadarAdapter extends utils.Adapter {
         });
     }
 
+    async ensureMinuteState(id, name) {
+        await this.ensureState(id, name, 'number', 'value', 'min');
+        await this.extendObjectAsync(id, { common: { role: 'value', unit: 'min' } });
+    }
+
     async createOutputTree() {
         await this.ensureChannel('summary', 'Anwesenheitsübersicht');
         await this.ensureState('summary.anyoneHome', 'Mindestens eine Person zu Hause', 'boolean', 'indicator');
@@ -219,16 +225,18 @@ class HomeRadarAdapter extends utils.Adapter {
             await this.ensureState(`persons.${person.id}.location.latitude`, 'Aktueller Breitengrad', 'number', 'value.gps.latitude', '°');
             await this.ensureState(`persons.${person.id}.location.longitude`, 'Aktueller Längengrad', 'number', 'value.gps.longitude', '°');
             await this.ensureState(`persons.${person.id}.location.openStreetMapUrl`, 'Standort auf OpenStreetMap', 'string', 'text.url');
+            await this.ensureChannel(`persons.${person.id}.location.address`, 'Adresse');
+            for (const [field, label] of Object.entries({ formatted: 'Vollständige Adresse', street: 'Straße', houseNumber: 'Hausnummer', postcode: 'Postleitzahl', city: 'Ort', state: 'Bundesland', country: 'Land' })) {
+                await this.ensureState(`persons.${person.id}.location.address.${field}`, label, 'string', 'text');
+            }
+            await this.ensureState(`persons.${person.id}.location.address.status`, 'Status der Adressauflösung', 'string', 'text');
             await this.ensureChannel(`persons.${person.id}.presence`, 'Anwesenheit');
             await this.ensureState(`persons.${person.id}.presence.isHome`, 'Ist zu Hause', 'boolean', 'indicator');
             await this.ensureState(`persons.${person.id}.presence.currentPlace`, 'Aktueller Aufenthaltsort', 'string', 'text');
             await this.ensureState(`persons.${person.id}.presence.lastUpdate`, 'Letzte Koordinatenprüfung', 'number', 'date', 'ms');
             await this.ensureChannel(`persons.${person.id}.places`, 'Orte');
             await this.ensureChannel(`persons.${person.id}.travelTimes`, 'Reisezeiten');
-            await this.ensureChannel(`persons.${person.id}.travelTimes.home`, 'Fahrzeit nach Hause');
-            await this.ensureState(`persons.${person.id}.travelTimes.home.minutes`, 'Fahrzeit nach Hause', 'number', 'value.timer', 'min');
-            await this.ensureState(`persons.${person.id}.travelTimes.home.distance`, 'Streckenlänge nach Hause', 'number', 'value.distance', 'km');
-            await this.ensureState(`persons.${person.id}.travelTimes.home.status`, 'Status der Routenberechnung nach Hause', 'string', 'text');
+            await this.delObjectAsync(`persons.${person.id}.travelTimes.home`, { recursive: true });
             await this.ensureChannel(`persons.${person.id}.travelTimes.places`, 'Fahrzeiten zu Orten');
 
             for (const place of this.places) {
@@ -236,7 +244,7 @@ class HomeRadarAdapter extends utils.Adapter {
                 await this.ensureState(`persons.${person.id}.places.${place.id}.inside`, 'Innerhalb des Erkennungsradius', 'boolean', 'indicator');
                 await this.ensureState(`persons.${person.id}.places.${place.id}.distance`, 'Luftlinienentfernung', 'number', 'value.distance', 'm');
                 await this.ensureChannel(`persons.${person.id}.travelTimes.places.${place.id}`, place.name);
-                await this.ensureState(`persons.${person.id}.travelTimes.places.${place.id}.minutes`, `Fahrzeit zum Ort ${place.name}`, 'number', 'value.timer', 'min');
+                await this.ensureMinuteState(`persons.${person.id}.travelTimes.places.${place.id}.minutes`, `Fahrzeit zum Ort ${place.name}`);
                 await this.ensureState(`persons.${person.id}.travelTimes.places.${place.id}.distance`, `Streckenlänge zum Ort ${place.name}`, 'number', 'value.distance', 'km');
                 await this.ensureState(`persons.${person.id}.travelTimes.places.${place.id}.status`, `Status der Routenberechnung zum Ort ${place.name}`, 'string', 'text');
             }
@@ -336,6 +344,7 @@ class HomeRadarAdapter extends utils.Adapter {
         await this.setValue(`persons.${person.id}.location.latitude`, coordinates.latitude);
         await this.setValue(`persons.${person.id}.location.longitude`, coordinates.longitude);
         await this.setValue(`persons.${person.id}.location.openStreetMapUrl`, this.openStreetMapUrl(coordinates));
+        await this.updatePersonAddress(person, coordinates);
         this.presenceByPerson.set(person.id, isHome);
         await this.setValue(`persons.${person.id}.presence.isHome`, isHome);
         await this.setValue(`persons.${person.id}.presence.currentPlace`, currentPlace ? currentPlace.place.name : 'not_home');
@@ -353,27 +362,24 @@ class HomeRadarAdapter extends utils.Adapter {
             await this.setValue(`${placeBase}.distance`, Math.round(item.distance));
         }
 
-        const travelBase = `persons.${person.id}.travelTimes.home`;
-        if (!homePlace) {
-            await this.setValue(`${travelBase}.status`, 'Kein Zuhause-Ort konfiguriert');
-        } else if (isHome) {
-            await this.setValue(`${travelBase}.minutes`, 0);
-            await this.setValue(`${travelBase}.distance`, 0);
-            await this.setValue(`${travelBase}.status`, 'Am Ziel');
-        } else if (!this.getConfigValue('routingTab', 'routingEnabled', true)) {
-            await this.setValue(`${travelBase}.status`, 'Routenberechnung deaktiviert');
+        const homeTravelBase = homePlace ? `persons.${person.id}.travelTimes.places.${homePlace.place.id}` : null;
+        if (isHome && homeTravelBase) {
+            await this.setValue(`${homeTravelBase}.minutes`, 0);
+            await this.setValue(`${homeTravelBase}.distance`, 0);
+            await this.setValue(`${homeTravelBase}.status`, 'Am Ziel');
         }
 
         if (!this.getConfigValue('routingTab', 'routingEnabled', true)) {
             for (const place of this.places) {
+                if (place.isHome && isHome) continue;
                 await this.setValue(`persons.${person.id}.travelTimes.places.${place.id}.status`, 'Routenberechnung deaktiviert');
             }
             return;
         }
         if (!this.places.length) return;
 
-        if (homePlace && !isHome) await this.setValue(`${travelBase}.status`, 'Wird berechnet');
         for (const place of this.places) {
+            if (place.isHome && isHome) continue;
             await this.setValue(`persons.${person.id}.travelTimes.places.${place.id}.status`, 'Wird berechnet');
         }
 
@@ -388,48 +394,79 @@ class HomeRadarAdapter extends utils.Adapter {
 
         for (let index = 0; index < this.places.length; index++) {
             const place = this.places[index];
+            if (place.isHome && isHome) continue;
             const route = matrix?.routes[index];
             const placeTravelBase = `persons.${person.id}.travelTimes.places.${place.id}`;
             if (!route || !Number.isFinite(route.duration) || !Number.isFinite(route.distance)) {
+                const fallbackPlace = currentPlace?.place;
+                const hasHomeFallback = place.isHome && fallbackPlace &&
+                    Number.isFinite(fallbackPlace.fallbackHomeDistanceKm) &&
+                    Number.isFinite(fallbackPlace.fallbackHomeMinutes);
+                if (hasHomeFallback) {
+                    await this.setValue(`${placeTravelBase}.minutes`, fallbackPlace.fallbackHomeMinutes);
+                    await this.setValue(`${placeTravelBase}.distance`, fallbackPlace.fallbackHomeDistanceKm);
+                    await this.setValue(`${placeTravelBase}.status`, `Fallback: ${fallbackPlace.name}`);
+                    continue;
+                }
                 await this.setValue(`${placeTravelBase}.status`, matrixError ? `Fehler: ${matrixError.message || matrixError}` : 'Keine Route gefunden');
                 continue;
             }
             await this.setValue(`${placeTravelBase}.minutes`, Math.round(route.duration / 60));
             await this.setValue(`${placeTravelBase}.distance`, Math.round(route.distance / 100) / 10);
             const cacheLabel = matrix.cached ? 'Zwischengespeichert' : 'OK';
-            const providerLabel = matrix.provider === 'openrouteservice' ? 'OpenRouteService' : 'OSRM';
+            const providerLabel = ({ openrouteservice: 'OpenRouteService', geoapify: 'Geoapify' })[matrix.provider] || 'OSRM';
             await this.setValue(`${placeTravelBase}.status`, `${cacheLabel} (${providerLabel})`);
         }
 
-        if (!homePlace || isHome) return;
-        const homeIndex = this.places.findIndex(place => place.id === homePlace.place.id);
-        const homeRoute = matrix?.routes[homeIndex];
-        if (homeRoute && Number.isFinite(homeRoute.duration) && Number.isFinite(homeRoute.distance)) {
-            await this.setValue(`${travelBase}.minutes`, Math.round(homeRoute.duration / 60));
-            await this.setValue(`${travelBase}.distance`, Math.round(homeRoute.distance / 100) / 10);
-            const cacheLabel = matrix.cached ? 'Zwischengespeichert' : 'OK';
-            const providerLabel = matrix.provider === 'openrouteservice' ? 'OpenRouteService' : 'OSRM';
-            await this.setValue(`${travelBase}.status`, `${cacheLabel} (${providerLabel})`);
-        } else {
-            const fallbackPlace = currentPlace?.place;
-            const hasFallback = fallbackPlace &&
-                Number.isFinite(fallbackPlace.fallbackHomeDistanceKm) &&
-                Number.isFinite(fallbackPlace.fallbackHomeMinutes);
-            if (hasFallback) {
-                await this.setValue(`${travelBase}.minutes`, fallbackPlace.fallbackHomeMinutes);
-                await this.setValue(`${travelBase}.distance`, fallbackPlace.fallbackHomeDistanceKm);
-                await this.setValue(`${travelBase}.status`, `Fallback: ${fallbackPlace.name}`);
-            } else {
-                const errorMessage = matrixError?.message || 'Keine Route nach Hause gefunden';
-                await this.setValue(`${travelBase}.status`, `Fehler: ${errorMessage}`);
-            }
-        }
         if (matrixError) this.log.warn(`Routenmatrix für ${person.name} fehlgeschlagen: ${matrixError.message || matrixError}`);
     }
 
     openStreetMapUrl(coordinates) {
         const { latitude, longitude } = coordinates;
         return `https://www.openstreetmap.org/?mlat=${latitude}&mlon=${longitude}#map=17/${latitude}/${longitude}`;
+    }
+
+    async updatePersonAddress(person, coordinates) {
+        const apiKey = String(this.getConfigValue('routingTab', 'geoapifyApiKey', '') || '').trim();
+        if (!apiKey) return;
+        const cached = this.addressCache.get(person.id);
+        if (cached && this.distanceMeters(cached.origin.latitude, cached.origin.longitude, coordinates.latitude, coordinates.longitude) < 30) {
+            await this.setValue(`persons.${person.id}.location.address.status`, 'Zwischengespeichert (Geoapify)');
+            return;
+        }
+
+        try {
+            const url = new URL('https://api.geoapify.com/v1/geocode/reverse');
+            url.searchParams.set('lat', String(coordinates.latitude));
+            url.searchParams.set('lon', String(coordinates.longitude));
+            url.searchParams.set('lang', 'de');
+            url.searchParams.set('apiKey', apiKey);
+            const response = await fetch(url, { headers: { 'User-Agent': 'ioBroker.homeradar' }, signal: AbortSignal.timeout(15000) });
+            if (!response.ok) throw new Error(`Geoapify antwortet mit HTTP ${response.status}`);
+            const result = await response.json();
+            const properties = result.features?.[0]?.properties;
+            if (!properties) {
+                await this.setValue(`persons.${person.id}.location.address.status`, 'Keine Adresse gefunden');
+                return;
+            }
+            const values = {
+                formatted: properties.formatted,
+                street: properties.street,
+                houseNumber: properties.housenumber,
+                postcode: properties.postcode,
+                city: properties.city || properties.town || properties.village || properties.suburb,
+                state: properties.state,
+                country: properties.country
+            };
+            for (const [field, value] of Object.entries(values)) {
+                await this.setValue(`persons.${person.id}.location.address.${field}`, String(value || ''));
+            }
+            await this.setValue(`persons.${person.id}.location.address.status`, 'OK (Geoapify)');
+            this.addressCache.set(person.id, { origin: { ...coordinates } });
+        } catch (error) {
+            await this.setValue(`persons.${person.id}.location.address.status`, `Fehler: ${error.message || error}`);
+            this.log.warn(`Adressauflösung für ${person.name} fehlgeschlagen: ${error.message || error}`);
+        }
     }
 
     async getPersonRouteMatrix(person, origin) {
@@ -478,24 +515,57 @@ class HomeRadarAdapter extends utils.Adapter {
     }
 
     async requestRouteMatrix(origin, destinations) {
-        let osrmError;
+        const errors = [];
         try {
             return await this.requestOsrmMatrix(origin, destinations);
         } catch (error) {
-            osrmError = error;
+            errors.push(`OSRM: ${error.message || error}`);
         }
 
-        if (!this.getConfigValue('routingTab', 'useOpenRouteServiceFallback', false)) throw osrmError;
-        const apiKey = String(this.getConfigValue('routingTab', 'openRouteServiceApiKey', '') || '').trim();
-        if (!apiKey) {
-            throw new Error(`OSRM: ${osrmError.message || osrmError}; OpenRouteService-Fallback ist aktiviert, aber es ist kein API-Schlüssel eingetragen`);
+        if (this.getConfigValue('routingTab', 'useOpenRouteServiceFallback', false)) {
+            const apiKey = String(this.getConfigValue('routingTab', 'openRouteServiceApiKey', '') || '').trim();
+            if (apiKey) {
+                try {
+                    return await this.requestOpenRouteServiceMatrix(origin, destinations, apiKey);
+                } catch (error) {
+                    errors.push(`OpenRouteService: ${error.message || error}`);
+                }
+            }
         }
 
-        try {
-            return await this.requestOpenRouteServiceMatrix(origin, destinations, apiKey);
-        } catch (error) {
-            throw new Error(`OSRM: ${osrmError.message || osrmError}; OpenRouteService: ${error.message || error}`);
+        const geoapifyKey = String(this.getConfigValue('routingTab', 'geoapifyApiKey', '') || '').trim();
+        if (geoapifyKey) {
+            try {
+                return await this.requestGeoapifyMatrix(origin, destinations, geoapifyKey);
+            } catch (error) {
+                errors.push(`Geoapify: ${error.message || error}`);
+            }
         }
+        throw new Error(errors.join('; '));
+    }
+
+    async requestGeoapifyMatrix(origin, destinations, apiKey) {
+        const url = new URL('https://api.geoapify.com/v1/routematrix');
+        url.searchParams.set('apiKey', apiKey);
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Accept: 'application/json', 'User-Agent': 'ioBroker.homeradar' },
+            body: JSON.stringify({
+                mode: 'drive',
+                sources: [{ location: [origin.longitude, origin.latitude] }],
+                targets: destinations.map(place => ({ location: [place.longitude, place.latitude] })),
+                units: 'metric'
+            }),
+            signal: AbortSignal.timeout(15000)
+        });
+        if (!response.ok) throw new Error(`Routingdienst antwortet mit HTTP ${response.status}`);
+        const result = await response.json();
+        const routes = result.sources_to_targets?.[0];
+        if (!Array.isArray(routes) || routes.length !== destinations.length) throw new Error('Keine gültige Routenmatrix erhalten');
+        return {
+            provider: 'geoapify',
+            routes: routes.map(route => ({ duration: route.time, distance: route.distance }))
+        };
     }
 
     async requestOsrmMatrix(origin, destinations) {
