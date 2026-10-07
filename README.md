@@ -51,9 +51,10 @@ persons.<personId>
 ├─ places.<placeId>
 │  ├─ inside                 whether the person is within the place radius
 │  └─ distance               straight-line distance in meters
-└─ travelTimes.home
+└─ travelTime.home
    ├─ minutes                estimated driving time home
    ├─ distance               route length to home in kilometers
+   ├─ combined               rounded distance and time, e.g. 39km / 32min
    └─ status                 route calculation or cache status
 
 apiUsage
@@ -167,9 +168,10 @@ persons.<personId>
 ├─ places.<placeId>
 │  ├─ inside                 Person befindet sich innerhalb des Ortsradius
 │  └─ distance               Luftlinienentfernung in Metern
-└─ travelTimes.home
+└─ travelTime.home
    ├─ minutes                geschätzte Fahrzeit nach Hause
    ├─ distance               Streckenlänge nach Hause in Kilometern
+   ├─ combined               gerundete Entfernung und Fahrzeit, z. B. 39km / 32min
    └─ status                 Status der Routenberechnung oder des Caches
 
 apiUsage
@@ -184,7 +186,7 @@ apiUsage
 
 Jeder Eintrag in `apiUsage.history` enthält `date`, erfolgreiche und fehlgeschlagene OSRM-Aufrufe, erfolgreiche und fehlgeschlagene Geoapify-Routen- und Adressabfragen sowie Geoapify-Credits. Der Adapter hängt die Tageswerte um 23:59 an und aktualisiert diesen Tageseintrag um Mitternacht, damit auch Aufrufe aus der letzten Minute enthalten sind. Vorhandene datumsbezogene History-Datenpunkte werden beim Start in dieses JSON übernommen. Die Historie wird nicht automatisch gekürzt.
 
-Unter `travelTimes` gibt es nur die Route nach Hause. Befindet sich eine Person innerhalb des Zuhause-Radius, werden Fahrzeit und Entfernung lokal auf null gesetzt. Beim Start wird jede Person einmal geprüft. Danach wird nur eine Person aktualisiert, wenn sich ihre Koordinaten ändern. Nach einer erfolgreichen Anfrage wird die Route wiederverwendet, bis sich der Standort um mindestens 30 Meter vom letzten erfolgreichen Routenaufruf entfernt hat. Schlägt das Routing fehl und befindet sich die Person innerhalb eines konfigurierten Orts mit beiden eingetragenen Fallback-Werten, verwendet der Adapter Entfernung und Fahrzeit dieses Orts. Nach einem Fehler versucht HomeRadar es bei der nächsten Koordinatenänderung oder beim nächsten Adapterstart erneut.
+Unter `travelTime` gibt es nur die Route nach Hause. Befindet sich eine Person innerhalb des Zuhause-Radius, werden Fahrzeit und Entfernung lokal auf null gesetzt. `combined` zeigt Entfernung und Fahrzeit gemeinsam; bei einer fehlgeschlagenen Routenabfrage ohne verfügbaren Orts-Fallback steht dort „Nicht verfügbar“. Beim Start wird jede Person einmal geprüft. Danach wird nur eine Person aktualisiert, wenn sich ihre Koordinaten ändern. Nach einer erfolgreichen Anfrage wird die Route wiederverwendet, bis sich der Standort um mindestens 30 Meter vom letzten erfolgreichen Routenaufruf entfernt hat. Schlägt das Routing fehl und befindet sich die Person innerhalb eines konfigurierten Orts mit beiden eingetragenen Fallback-Werten, verwendet der Adapter Entfernung und Fahrzeit dieses Orts. Nach einem Fehler versucht HomeRadar es bei der nächsten Koordinatenänderung oder beim nächsten Adapterstart erneut.
 
 Die Streckenlängen folgen der vom Routingdienst ausgewählten Route. Beim öffentlichen OSRM-Tabellendienst ist das die schnellste Route und nicht zwingend die kürzeste Straßenstrecke. Entfernung und Fahrzeit beziehen sich damit auf dieselbe schnellste Route.
 
