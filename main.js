@@ -3,7 +3,6 @@
 const utils = require("@iobroker/adapter-core");
 
 const ROUTE_REQUEST_GAP_MS = 1200;
-const API_USAGE_HISTORY_DAYS = 30;
 const ADDRESS_COMPONENT_MAX_DISTANCE_METERS = 100;
 const API_USAGE_COUNTERS = [
   "osrm.routing.successful",
@@ -333,8 +332,8 @@ class HomeRadarAdapter extends utils.Adapter {
   async initializeApiUsage() {
     await this.ensureChannel("apiUsage", "API-Aufrufstatistik");
     await this.ensureChannel("apiUsage.today", "Heute");
-    await this.ensureChannel("apiUsage.history", "Tagesverlauf (30 Tage)");
     await this.ensureApiUsageTree("apiUsage.today");
+    await this.migrateApiUsageHistory();
     await this.ensureState(
       "apiUsage.today.date",
       "Datum der Tageszähler",
@@ -356,28 +355,46 @@ class HomeRadarAdapter extends utils.Adapter {
     const today = this.localDateKey();
     const dateState = await this.getStateAsync("apiUsage.today.date");
     this.apiUsageDate = dateState?.val === today ? today : "";
-    await this.ensureUsageHistoryDay(today);
     if (!this.apiUsageDate) {
+      if (dateState?.val) {
+        await this.archiveApiUsageDay(String(dateState.val));
+      }
       await this.resetTodayApiUsage(today);
     }
-    await this.pruneApiUsageHistory(today);
     this.scheduleApiUsageRollover();
   }
 
-  async ensureUsageHistoryDay(dateKey) {
-    const path = `apiUsage.history.${dateKey}`;
-    await this.ensureApiUsageTree(path);
-    for (const counter of API_USAGE_COUNTERS) {
-      const id = `${path}.${counter}`;
-      if (!(await this.getStateAsync(id))) {
-        await this.setValue(id, 0);
+  async migrateApiUsageHistory() {
+    const historyObject = await this.getObjectAsync("apiUsage.history");
+    let history = [];
+
+    if (historyObject?.type === "state") {
+      const historyState = await this.getStateAsync("apiUsage.history");
+      if (historyState?.val) {
+        const parsed = JSON.parse(String(historyState.val));
+        if (!Array.isArray(parsed)) {
+          throw new Error("API-Tagesverlauf enthält kein JSON-Array");
+        }
+        history = parsed;
       }
+    } else {
+      for (const dateKey of await this.getDirectChildIds("apiUsage.history")) {
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(dateKey)) {
+          continue;
+        }
+        history.push(await this.readLegacyApiUsageDay(dateKey));
+      }
+      await this.delObjectAsync("apiUsage.history", { recursive: true });
     }
-    const creditsId = `${path}.geoapify.credits`;
-    if (!(await this.getStateAsync(creditsId))) {
-      await this.setValue(creditsId, 0);
-    }
-    return path;
+
+    history.sort((first, second) => first.date.localeCompare(second.date));
+    await this.ensureState(
+      "apiUsage.history",
+      "Tagesverlauf der API-Aufrufe (JSON)",
+      "string",
+      "json",
+    );
+    await this.setValue("apiUsage.history", JSON.stringify(history));
   }
 
   async resetTodayApiUsage(dateKey) {
@@ -389,35 +406,110 @@ class HomeRadarAdapter extends utils.Adapter {
     this.apiUsageDate = dateKey;
   }
 
-  async pruneApiUsageHistory(todayKey) {
-    const oldest = new Date(`${todayKey}T00:00:00`);
-    oldest.setDate(oldest.getDate() - (API_USAGE_HISTORY_DAYS - 1));
-    const cutoff = this.localDateKey(oldest);
-    for (const dateKey of await this.getDirectChildIds("apiUsage.history")) {
-      if (/^\d{4}-\d{2}-\d{2}$/.test(dateKey) && dateKey < cutoff) {
-        await this.delObjectAsync(`apiUsage.history.${dateKey}`, {
-          recursive: true,
-        });
+  async readLegacyApiUsageDay(dateKey) {
+    const day = {
+      date: dateKey,
+      osrm: { successful: 0, failed: 0 },
+      geoapify: {
+        routing: { successful: 0, failed: 0 },
+        addressLookup: { successful: 0, failed: 0 },
+        credits: 0,
+      },
+    };
+    for (const counter of API_USAGE_COUNTERS) {
+      const state = await this.getStateAsync(
+        `apiUsage.history.${dateKey}.${counter}`,
+      );
+      const value = Number(state?.val);
+      const count = Number.isFinite(value) ? value : 0;
+      const parts = counter.split(".");
+      if (parts[0] === "osrm") {
+        day.osrm[parts.at(-1)] = count;
+      } else {
+        day.geoapify[parts[1]][parts.at(-1)] = count;
       }
     }
+    const creditsState = await this.getStateAsync(
+      `apiUsage.history.${dateKey}.geoapify.credits`,
+    );
+    const credits = Number(creditsState?.val);
+    day.geoapify.credits = Number.isFinite(credits) ? credits : 0;
+    return day;
+  }
+
+  async readTodayApiUsageDay(dateKey) {
+    const day = {
+      date: dateKey,
+      osrm: { successful: 0, failed: 0 },
+      geoapify: {
+        routing: { successful: 0, failed: 0 },
+        addressLookup: { successful: 0, failed: 0 },
+        credits: 0,
+      },
+    };
+    for (const counter of API_USAGE_COUNTERS) {
+      const state = await this.getStateAsync(`apiUsage.today.${counter}`);
+      const value = Number(state?.val);
+      const count = Number.isFinite(value) ? value : 0;
+      const parts = counter.split(".");
+      if (parts[0] === "osrm") {
+        day.osrm[parts.at(-1)] = count;
+      } else {
+        day.geoapify[parts[1]][parts.at(-1)] = count;
+      }
+    }
+    const creditsState = await this.getStateAsync(
+      "apiUsage.today.geoapify.credits",
+    );
+    const credits = Number(creditsState?.val);
+    day.geoapify.credits = Number.isFinite(credits) ? credits : 0;
+    return day;
+  }
+
+  async archiveApiUsageDay(dateKey) {
+    if (!dateKey) {
+      return;
+    }
+    const historyState = await this.getStateAsync("apiUsage.history");
+    const parsed = historyState?.val
+      ? JSON.parse(String(historyState.val))
+      : [];
+    if (!Array.isArray(parsed)) {
+      throw new Error("API-Tagesverlauf enthält kein JSON-Array");
+    }
+    const history = parsed.filter((entry) => entry?.date !== dateKey);
+    history.push(await this.readTodayApiUsageDay(dateKey));
+    history.sort((first, second) => first.date.localeCompare(second.date));
+    await this.setValue("apiUsage.history", JSON.stringify(history));
   }
 
   scheduleApiUsageRollover() {
     if (this.apiUsageRolloverTimer) {
       clearTimeout(this.apiUsageRolloverTimer);
     }
-    const nextMidnight = new Date();
-    nextMidnight.setHours(24, 0, 0, 50);
+    const now = new Date();
+    const archiveTime = new Date(now);
+    archiveTime.setHours(23, 59, 0, 0);
+    const isArchiveTime = archiveTime.getTime() > now.getTime();
+    const nextRun = isArchiveTime ? archiveTime : new Date(now);
+    if (!isArchiveTime) {
+      nextRun.setDate(nextRun.getDate() + 1);
+      nextRun.setHours(0, 0, 1, 0);
+    }
     this.apiUsageRolloverTimer = setTimeout(
       () => {
         const task = this.apiUsageQueue.then(async () => {
-          const today = this.localDateKey();
-          if (today !== this.apiUsageDate) {
-            await this.resetTodayApiUsage(today);
-            await this.ensureUsageHistoryDay(today);
-            await this.pruneApiUsageHistory(today);
+          try {
+            const today = this.localDateKey();
+            if (isArchiveTime) {
+              await this.archiveApiUsageDay(today);
+            } else if (today !== this.apiUsageDate) {
+              await this.archiveApiUsageDay(this.apiUsageDate);
+              await this.resetTodayApiUsage(today);
+            }
+          } finally {
+            this.scheduleApiUsageRollover();
           }
-          this.scheduleApiUsageRollover();
         });
         this.apiUsageQueue = task.catch((error) => {
           this.log.warn(
@@ -425,7 +517,7 @@ class HomeRadarAdapter extends utils.Adapter {
           );
         });
       },
-      Math.max(1000, nextMidnight.getTime() - Date.now()),
+      Math.max(1000, nextRun.getTime() - Date.now()),
     );
     this.apiUsageRolloverTimer.unref?.();
   }
@@ -434,22 +526,15 @@ class HomeRadarAdapter extends utils.Adapter {
     const task = this.apiUsageQueue.then(async () => {
       const today = this.localDateKey();
       if (today !== this.apiUsageDate) {
+        await this.archiveApiUsageDay(this.apiUsageDate);
         await this.resetTodayApiUsage(today);
-        await this.ensureUsageHistoryDay(today);
-        await this.pruneApiUsageHistory(today);
       }
       const status = succeeded ? "successful" : "failed";
       const counter = `${provider}.${operation}.${status}`;
-      const historyPath = await this.ensureUsageHistoryDay(today);
       await this.incrementUsageState(`apiUsage.today.${counter}`);
-      await this.incrementUsageState(`${historyPath}.${counter}`);
       if (credits > 0) {
         await this.incrementUsageState(
           "apiUsage.today.geoapify.credits",
-          credits,
-        );
-        await this.incrementUsageState(
-          `${historyPath}.geoapify.credits`,
           credits,
         );
       }

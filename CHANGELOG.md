@@ -2,14 +2,15 @@
 
 ## 0.2.2 (2026-10-07)
 
+- Store daily API usage history in one JSON datapoint, append the daily counters at 23:59, and retain the history indefinitely; migrate existing per-day history datapoints.
 - Set the combined home-route value to `Nicht verfügbar` when routing fails and no place fallback can be used.
 - Rename the per-person `travelTimes` channel to `travelTime` and add a combined home-route value with rounded kilometers and minutes.
 - Suppress street and house number when Geoapify's result is more than 100 meters from the person's coordinates; retain other address fields and the raw response.
-- Limit daily API history to 30 days and remove the cumulative Geoapify credit counter.
+- Remove the cumulative Geoapify credit counter.
 - Calculate and store only each person's route home; keep configured places for local presence detection and home-route fallback.
 - Move per-person coordinates and OpenStreetMap links into dedicated `location.coordinates` and `location.map` channels.
 - Add an address refresh distance for each person, defaulting to 100 meters, with an explicit Geoapify credit-use hint in the settings.
-- Track successful and failed OSRM and Geoapify requests by day and retain daily history for 30 days.
+- Track successful and failed OSRM and Geoapify requests and Geoapify credits per day.
 - Track Geoapify credits for successful responses using the published reverse-geocoding and single-destination route-matrix pricing rules.
 
 ## 0.2.1 (2026-10-06)

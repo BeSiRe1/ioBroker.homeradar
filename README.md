@@ -18,7 +18,7 @@ For routing and address details, see the [OSRM HTTP API documentation](https://p
 - Set the travel time home to zero locally when a person is within the home radius; no routing request is needed at home.
 - Show a central home-presence summary with a boolean, person count, and names.
 - Show each person's presence, current place, distances, travel times, and route calculation status in the ioBroker object tree.
-- Count successful and failed OSRM and Geoapify requests, store daily history for 30 days, and track Geoapify credits for successful responses.
+- Count successful and failed OSRM and Geoapify requests, keep today's counters as individual states, and append each day's totals to one JSON history state indefinitely.
 
 ## Object structure
 
@@ -64,8 +64,10 @@ apiUsage
 │     ├─ routing.successful / failed
 │     ├─ addressLookup.successful / failed
 │     └─ credits
-└─ history.<YYYY-MM-DD>      same daily counters, retained for 30 days
+└─ history                   JSON array; one record per day, appended at 23:59 and retained indefinitely
 ```
+
+Each `apiUsage.history` record contains `date`, successful and failed OSRM requests, successful and failed Geoapify routing and address lookups, and Geoapify credits. The adapter appends the day's totals at 23:59 and updates that date's record at midnight to include requests made during the final minute. Existing per-day history states are migrated into this JSON array when the adapter starts.
 
 Travel-time states exist only for the route home. When a person is within the home radius, the travel time and distance are set to zero locally. All people are checked once at startup. Afterwards, only a person whose coordinates change is updated. After a successful request, the route is reused until that person's location changes by at least 30 meters from the last successful route query. If routing fails and the person is inside a configured place with both fallback values set, the adapter uses that place's fallback distance and travel time. After an error, HomeRadar tries again on the next coordinate change or adapter restart.
 
@@ -132,7 +134,7 @@ Weitere Informationen findest du in der [OSRM-HTTP-API-Dokumentation](https://pr
 - Die Fahrzeit nach Hause lokal auf null setzen, wenn sich eine Person innerhalb des Zuhause-Radius befindet; dafür wird keine Routenanfrage benötigt.
 - Eine zentrale Anwesenheitsübersicht mit Boolean, Personenanzahl und Namen der anwesenden Personen anzeigen.
 - Anwesenheit, aktuellen Ort, Entfernungen, Fahrzeiten und den Status der Routenberechnung im ioBroker-Datenpunktbaum anzeigen.
-- Erfolgreiche und fehlgeschlagene OSRM- und Geoapify-Aufrufe zählen, Tageswerte 30 Tage speichern und Geoapify-Credits erfolgreicher Antworten erfassen.
+- Erfolgreiche und fehlgeschlagene OSRM- und Geoapify-Aufrufe zählen, die heutigen Zähler als einzelne Datenpunkte anzeigen und die Tageswerte dauerhaft in einem JSON-Datenpunkt sammeln.
 
 ## Datenpunktstruktur
 
@@ -177,8 +179,10 @@ apiUsage
 │     ├─ routing.successful / failed
 │     ├─ addressLookup.successful / failed
 │     └─ credits
-└─ history.<YYYY-MM-DD>      dieselben Tageszähler, 30 Tage aufbewahrt
+└─ history                   JSON-Array; Tageswerte werden um 23:59 angehängt und dauerhaft gespeichert
 ```
+
+Jeder Eintrag in `apiUsage.history` enthält `date`, erfolgreiche und fehlgeschlagene OSRM-Aufrufe, erfolgreiche und fehlgeschlagene Geoapify-Routen- und Adressabfragen sowie Geoapify-Credits. Der Adapter hängt die Tageswerte um 23:59 an und aktualisiert diesen Tageseintrag um Mitternacht, damit auch Aufrufe aus der letzten Minute enthalten sind. Vorhandene datumsbezogene History-Datenpunkte werden beim Start in dieses JSON übernommen. Die Historie wird nicht automatisch gekürzt.
 
 Unter `travelTimes` gibt es nur die Route nach Hause. Befindet sich eine Person innerhalb des Zuhause-Radius, werden Fahrzeit und Entfernung lokal auf null gesetzt. Beim Start wird jede Person einmal geprüft. Danach wird nur eine Person aktualisiert, wenn sich ihre Koordinaten ändern. Nach einer erfolgreichen Anfrage wird die Route wiederverwendet, bis sich der Standort um mindestens 30 Meter vom letzten erfolgreichen Routenaufruf entfernt hat. Schlägt das Routing fehl und befindet sich die Person innerhalb eines konfigurierten Orts mit beiden eingetragenen Fallback-Werten, verwendet der Adapter Entfernung und Fahrzeit dieses Orts. Nach einem Fehler versucht HomeRadar es bei der nächsten Koordinatenänderung oder beim nächsten Adapterstart erneut.
 
