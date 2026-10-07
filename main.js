@@ -507,16 +507,9 @@ class HomeRadarAdapter extends utils.Adapter {
           });
         }
       }
-      for (const childId of await this.getDirectChildIds(
-        `persons.${person.id}.travelTimes`,
-      )) {
-        if (childId !== "home") {
-          await this.delObjectAsync(
-            `persons.${person.id}.travelTimes.${childId}`,
-            { recursive: true },
-          );
-        }
-      }
+      await this.delObjectAsync(`persons.${person.id}.travelTimes`, {
+        recursive: true,
+      });
       await this.delObjectAsync(`persons.${person.id}.location.latitude`, {
         recursive: true,
       });
@@ -653,26 +646,32 @@ class HomeRadarAdapter extends utils.Adapter {
       );
       await this.ensureChannel(`persons.${person.id}.places`, "Orte");
       await this.ensureChannel(
-        `persons.${person.id}.travelTimes`,
+        `persons.${person.id}.travelTime`,
         "Reisezeiten",
       );
       await this.ensureChannel(
-        `persons.${person.id}.travelTimes.home`,
+        `persons.${person.id}.travelTime.home`,
         "Nach Hause",
       );
       await this.ensureMinuteState(
-        `persons.${person.id}.travelTimes.home.minutes`,
+        `persons.${person.id}.travelTime.home.minutes`,
         "Fahrzeit nach Hause",
       );
       await this.ensureState(
-        `persons.${person.id}.travelTimes.home.distance`,
+        `persons.${person.id}.travelTime.home.distance`,
         "Streckenlänge nach Hause",
         "number",
         "value.distance",
         "km",
       );
       await this.ensureState(
-        `persons.${person.id}.travelTimes.home.status`,
+        `persons.${person.id}.travelTime.home.combined`,
+        "Entfernung und Fahrzeit",
+        "string",
+        "text",
+      );
+      await this.ensureState(
+        `persons.${person.id}.travelTime.home.status`,
         "Status der Routenberechnung nach Hause",
         "string",
         "text",
@@ -851,7 +850,7 @@ class HomeRadarAdapter extends utils.Adapter {
       await this.setValue(`${placeBase}.distance`, Math.round(item.distance));
     }
 
-    const homeTravelBase = `persons.${person.id}.travelTimes.home`;
+    const homeTravelBase = `persons.${person.id}.travelTime.home`;
     if (!homePlace) {
       await this.setValue(
         `${homeTravelBase}.status`,
@@ -862,6 +861,7 @@ class HomeRadarAdapter extends utils.Adapter {
     if (isHome) {
       await this.setValue(`${homeTravelBase}.minutes`, 0);
       await this.setValue(`${homeTravelBase}.distance`, 0);
+      await this.setValue(`${homeTravelBase}.combined`, "0km / 0min");
       await this.setValue(`${homeTravelBase}.status`, "Am Ziel");
       return;
     }
@@ -907,6 +907,10 @@ class HomeRadarAdapter extends utils.Adapter {
           fallbackPlace.fallbackHomeDistanceKm,
         );
         await this.setValue(
+          `${homeTravelBase}.combined`,
+          `${Math.round(fallbackPlace.fallbackHomeDistanceKm)}km / ${Math.round(fallbackPlace.fallbackHomeMinutes)}min`,
+        );
+        await this.setValue(
           `${homeTravelBase}.status`,
           `Fallback: ${fallbackPlace.name}`,
         );
@@ -923,9 +927,14 @@ class HomeRadarAdapter extends utils.Adapter {
         `${homeTravelBase}.minutes`,
         Math.round(route.duration / 60),
       );
+      const roundedMinutes = Math.round(route.duration / 60);
       await this.setValue(
         `${homeTravelBase}.distance`,
         Math.round(route.distance / 100) / 10,
+      );
+      await this.setValue(
+        `${homeTravelBase}.combined`,
+        `${Math.round(route.distance / 1000)}km / ${roundedMinutes}min`,
       );
       const cacheLabel = matrix.cached ? "Zwischengespeichert" : "OK";
       const providerLabel =

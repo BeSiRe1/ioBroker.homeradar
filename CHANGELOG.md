@@ -2,6 +2,7 @@
 
 ## 0.2.2 (2026-10-07)
 
+- Rename the per-person `travelTimes` channel to `travelTime` and add a combined home-route value with rounded kilometers and minutes.
 - Suppress street and house number when Geoapify's result is more than 100 meters from the person's coordinates; retain other address fields and the raw response.
 - Limit daily API history to 30 days and remove the cumulative Geoapify credit counter.
 - Calculate and store only each person's route home; keep configured places for local presence detection and home-route fallback.
