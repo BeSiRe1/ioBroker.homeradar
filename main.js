@@ -408,20 +408,25 @@ class HomeRadarAdapter extends utils.Adapter {
     }
     const nextMidnight = new Date();
     nextMidnight.setHours(24, 0, 0, 50);
-    this.apiUsageRolloverTimer = setTimeout(() => {
-      const task = this.apiUsageQueue.then(async () => {
-        const today = this.localDateKey();
-        if (today !== this.apiUsageDate) {
-          await this.resetTodayApiUsage(today);
-          await this.ensureUsageHistoryDay(today);
-          await this.pruneApiUsageHistory(today);
-        }
-        this.scheduleApiUsageRollover();
-      });
-      this.apiUsageQueue = task.catch((error) => {
-        this.log.warn(`API-Statistik konnte nicht aktualisiert werden: ${error}`);
-      });
-    }, Math.max(1000, nextMidnight.getTime() - Date.now()));
+    this.apiUsageRolloverTimer = setTimeout(
+      () => {
+        const task = this.apiUsageQueue.then(async () => {
+          const today = this.localDateKey();
+          if (today !== this.apiUsageDate) {
+            await this.resetTodayApiUsage(today);
+            await this.ensureUsageHistoryDay(today);
+            await this.pruneApiUsageHistory(today);
+          }
+          this.scheduleApiUsageRollover();
+        });
+        this.apiUsageQueue = task.catch((error) => {
+          this.log.warn(
+            `API-Statistik konnte nicht aktualisiert werden: ${error}`,
+          );
+        });
+      },
+      Math.max(1000, nextMidnight.getTime() - Date.now()),
+    );
     this.apiUsageRolloverTimer.unref?.();
   }
 
@@ -439,8 +444,14 @@ class HomeRadarAdapter extends utils.Adapter {
       await this.incrementUsageState(`apiUsage.today.${counter}`);
       await this.incrementUsageState(`${historyPath}.${counter}`);
       if (credits > 0) {
-        await this.incrementUsageState("apiUsage.today.geoapify.credits", credits);
-        await this.incrementUsageState(`${historyPath}.geoapify.credits`, credits);
+        await this.incrementUsageState(
+          "apiUsage.today.geoapify.credits",
+          credits,
+        );
+        await this.incrementUsageState(
+          `${historyPath}.geoapify.credits`,
+          credits,
+        );
       }
     });
     this.apiUsageQueue = task.catch((error) => {
@@ -451,7 +462,9 @@ class HomeRadarAdapter extends utils.Adapter {
 
   async incrementUsageState(id, amount = 1) {
     const current = await this.getStateAsync(id);
-    const value = Number.isFinite(Number(current?.val)) ? Number(current.val) : 0;
+    const value = Number.isFinite(Number(current?.val))
+      ? Number(current.val)
+      : 0;
     await this.setValue(id, value + amount);
   }
 
@@ -489,10 +502,9 @@ class HomeRadarAdapter extends utils.Adapter {
         `persons.${person.id}.places`,
       )) {
         if (!configuredPlaceIds.has(childId)) {
-          await this.delObjectAsync(
-            `persons.${person.id}.places.${childId}`,
-            { recursive: true },
-          );
+          await this.delObjectAsync(`persons.${person.id}.places.${childId}`, {
+            recursive: true,
+          });
         }
       }
       for (const childId of await this.getDirectChildIds(
@@ -505,14 +517,12 @@ class HomeRadarAdapter extends utils.Adapter {
           );
         }
       }
-      await this.delObjectAsync(
-        `persons.${person.id}.location.latitude`,
-        { recursive: true },
-      );
-      await this.delObjectAsync(
-        `persons.${person.id}.location.longitude`,
-        { recursive: true },
-      );
+      await this.delObjectAsync(`persons.${person.id}.location.latitude`, {
+        recursive: true,
+      });
+      await this.delObjectAsync(`persons.${person.id}.location.longitude`, {
+        recursive: true,
+      });
       await this.delObjectAsync(
         `persons.${person.id}.location.openStreetMapUrl`,
         { recursive: true },
@@ -571,10 +581,7 @@ class HomeRadarAdapter extends utils.Adapter {
         "value.gps.longitude",
         "°",
       );
-      await this.ensureChannel(
-        `persons.${person.id}.location.map`,
-        "Karte",
-      );
+      await this.ensureChannel(`persons.${person.id}.location.map`, "Karte");
       await this.ensureState(
         `persons.${person.id}.location.map.openStreetMapUrl`,
         "Standort auf OpenStreetMap",
