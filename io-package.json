@@ -1,7 +1,7 @@
 {
   "common": {
     "name": "homeradar",
-    "version": "0.2.1",
+    "version": "0.2.2",
     "title": "HomeRadar",
     "titleLang": {
       "en": "HomeRadar",
@@ -48,8 +48,8 @@
     "extIcon": "https://raw.githubusercontent.com/BeSiRe1/ioBroker.homeradar/main/admin/homeradar.png",
     "news": {
       "NEXT": {
-        "en": "Added current-location map links, home presence summary, cached route matrices to places, and optional per-place home-route fallbacks.",
-        "de": "Aktuelle Koordinaten mit Kartenlink, zentrale Anwesenheitsübersicht, zwischengespeicherte Fahrzeitmatrizen zu Orten und optionale Orts-Fallbacks für Heimfahrten ergänzt."
+        "en": "Calculate only home routes, organize current-location coordinates and map links in separate channels, add per-person address refresh distances, and track API requests and Geoapify credits with a 90-day history.",
+        "de": "Nur Heimrouten berechnen, Koordinaten und Kartenlinks in eigene Ordner einsortieren, Adressabstände je Person einstellen und API-Aufrufe sowie Geoapify-Credits mit 90-Tage-Verlauf erfassen."
       }
     }
   },

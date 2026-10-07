@@ -67,7 +67,7 @@
               "attr": "longitudeId",
               "type": "objectId",
               "title": "longitudeId",
-              "width": "26%",
+              "width": "24%",
               "filter": false,
               "customFilter": {
                 "type": "state",
@@ -78,6 +78,16 @@
                   ]
                 }
               }
+            },
+            {
+              "attr": "addressUpdateDistanceMeters",
+              "type": "number",
+              "title": "addressUpdateDistanceMeters",
+              "width": "14%",
+              "filter": false,
+              "default": 100,
+              "min": 1,
+              "step": 1
             }
           ]
         },

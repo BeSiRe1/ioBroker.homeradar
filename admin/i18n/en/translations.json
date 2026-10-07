@@ -9,7 +9,8 @@
   "personName": "Display name",
   "latitudeId": "Latitude state",
   "longitudeId": "Longitude state",
-  "peopleHelp": "The unique ID is used in the object tree and should contain lowercase letters, numbers, and underscores. Current coordinates and an OpenStreetMap link are stored for each person.",
+  "addressUpdateDistanceMeters": "Refresh address after (m)",
+  "peopleHelp": "The unique ID is used in the object tree and should contain lowercase letters, numbers, and underscores. Current coordinates and an OpenStreetMap link are stored for each person. The smaller the value for 'Refresh address after (m)', the more often Geoapify is queried for a new address and the more Geoapify credits are consumed.",
   "placesIntro": "Add any number of places. The radius determines when a person is considered present at a place.",
   "places": "Frequently visited places",
   "placeId": "Unique ID",
@@ -21,13 +22,13 @@
   "fallbackHomeMinutes": "Fallback travel time (min)",
   "isHome": "Home",
   "placesHelp": "Only one place can be marked as home. The two fallback values describe the trip from this place to home and are used only if the online route request fails while the person is inside the place radius. Presence and place distances are calculated locally.",
-  "routingIntro": "Travel-time calculation is optional. All people are checked once at startup; afterwards, only the person whose coordinates change is updated. Each person's route matrix is reused until the location changes by at least 30 meters. After an error, HomeRadar retries on the next coordinate change or adapter restart.",
+  "routingIntro": "Travel-time calculation is optional. HomeRadar calculates only the route from each person's current location to home. All people are checked once at startup; afterwards, only the person whose coordinates change is updated. The home route is reused until the location changes by at least 30 meters. After an error, HomeRadar retries on the next coordinate change or adapter restart.",
   "routingEnabled": "Calculate travel times",
   "routingUrl": "OSRM server address",
   "useGeoapifyRoutingFallback": "Use Geoapify if OSRM fails (travel times)",
   "useGeoapifyAddressLookup": "Resolve addresses with Geoapify",
   "geoapifyApiKey": "Geoapify API key (addresses and routing fallback)",
-  "routingHelp": "All people are checked once when the adapter starts. Afterwards, only the person whose coordinates change is updated. Enable the two Geoapify options independently to use it for OSRM fallback, address lookup, or both. Address results are reused until the location changes by 30 meters. Create a free Geoapify project and copy its API key from myprojects.geoapify.com. Geoapify's free plan currently includes 3,000 credits per day; a reverse-geocoding request costs one credit and a matrix costs credits based on its source and target count. Neither Geoapify nor the public OSRM demo provides guaranteed availability; the public OSRM demo has no live traffic data.",
-  "helpIntro": "HomeRadar reads the selected coordinate states and creates per-person states for current location, an OpenStreetMap link, presence, detected places, distances, and travel times.",
-  "helpPrivacy": "Presence and distances are calculated locally. Travel-time matrices send the person's current coordinates and the configured place coordinates to OSRM; if the Geoapify routing fallback is enabled and OSRM fails, they are also sent to Geoapify. Current coordinates are sent to Geoapify for reverse address lookup only when that option is enabled; results are cached until movement reaches 30 meters. The OpenStreetMap link is generated locally; the browser is sent to OpenStreetMap with the coordinates only when the link is opened. When a person is within the home radius, travel time home is set to zero locally."
+  "routingHelp": "Geoapify can be enabled independently as an OSRM fallback for the home route, for address lookup, or both. Create a free Geoapify project and copy its API key from myprojects.geoapify.com. API usage records successful and failed requests and retains a 90-day history. Geoapify credits are summed for successful responses according to the published pricing rules; failed requests are counted separately. Geoapify's free plan currently includes 3,000 credits per day. Neither Geoapify nor the public OSRM demo provides guaranteed availability; the public OSRM demo has no live traffic data.",
+  "helpIntro": "HomeRadar reads the selected coordinate states and creates per-person states for current location, an OpenStreetMap link, presence, detected places, distances, and travel time home.",
+  "helpPrivacy": "Presence and distances are calculated locally. The home route sends the person's current coordinates and the home-place coordinates to OSRM; if the Geoapify routing fallback is enabled and OSRM fails, they are also sent to Geoapify. Current coordinates are sent to Geoapify for reverse address lookup only when that option is enabled; each person's address is looked up again after the configured movement threshold. The OpenStreetMap link is generated locally; the browser is sent to OpenStreetMap with the coordinates only when the link is opened. When a person is within the home radius, travel time home is set to zero locally. API request counters are stored daily with a 90-day history."
 }
