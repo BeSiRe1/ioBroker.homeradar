@@ -48,8 +48,8 @@
     "extIcon": "https://raw.githubusercontent.com/BeSiRe1/ioBroker.homeradar/main/admin/homeradar.png",
     "news": {
       "NEXT": {
-        "en": "Calculate only home routes, organize current-location coordinates and map links in separate channels, add per-person address refresh distances, and track API requests and Geoapify credits with a 90-day history.",
-        "de": "Nur Heimrouten berechnen, Koordinaten und Kartenlinks in eigene Ordner einsortieren, Adressabstände je Person einstellen und API-Aufrufe sowie Geoapify-Credits mit 90-Tage-Verlauf erfassen."
+        "en": "Calculate only home routes, organize current-location coordinates and map links in separate channels, add per-person address refresh distances, and track API requests with a 30-day history and nearby-address filtering.",
+        "de": "Nur Heimrouten berechnen, Koordinaten und Kartenlinks in eigene Ordner einsortieren, Adressabstände je Person einstellen und API-Aufrufe mit 30-Tage-Verlauf sowie Filter für nahe Adresstreffer ergänzen."
       }
     }
   },

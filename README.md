@@ -18,7 +18,7 @@ For routing and address details, see the [OSRM HTTP API documentation](https://p
 - Set the travel time home to zero locally when a person is within the home radius; no routing request is needed at home.
 - Show a central home-presence summary with a boolean, person count, and names.
 - Show each person's presence, current place, distances, travel times, and route calculation status in the ioBroker object tree.
-- Count successful and failed OSRM and Geoapify requests, store daily history for 90 days, and track Geoapify credits for successful responses.
+- Count successful and failed OSRM and Geoapify requests, store daily history for 30 days, and track Geoapify credits for successful responses.
 
 ## Object structure
 
@@ -64,9 +64,7 @@ apiUsage
 │     ├─ routing.successful / failed
 │     ├─ addressLookup.successful / failed
 │     └─ credits
-├─ history.<YYYY-MM-DD>      same daily counters, retained for 90 days
-└─ total
-   └─ geoapifyCredits        credits tracked since statistics were enabled
+└─ history.<YYYY-MM-DD>      same daily counters, retained for 30 days
 ```
 
 Travel-time states exist only for the route home. When a person is within the home radius, the travel time and distance are set to zero locally. All people are checked once at startup. Afterwards, only a person whose coordinates change is updated. After a successful request, the route is reused until that person's location changes by at least 30 meters from the last successful route query. If routing fails and the person is inside a configured place with both fallback values set, the adapter uses that place's fallback distance and travel time. After an error, HomeRadar tries again on the next coordinate change or adapter restart.
@@ -93,7 +91,7 @@ Enter a Geoapify API key in the instance settings. The separate options determin
 2. Copy the project API key from **API Keys**.
 3. Enter it in the HomeRadar instance settings under **Travel times**.
 
-The [Geoapify free plan](https://www.geoapify.com/pricing-details/) currently includes 3,000 credits per day. A reverse-geocoding request costs one credit. The home route uses a 1×1 matrix; its baseline cost is one credit, plus any documented distance surcharge. The adapter tracks credits from successful Geoapify responses and counts failed calls separately. Geoapify's API response does not provide an account-wide credit total; other applications using the same project key are not included. The address lookup is repeated after the distance configured for that person is reached (100 meters by default). Smaller values cause more address lookups and consume more credits. Geoapify routing provides free-flow or approximated traffic, not live traffic. The API key is stored as a protected, encrypted adapter setting.
+The [Geoapify free plan](https://www.geoapify.com/pricing-details/) currently includes 3,000 credits per day. A reverse-geocoding request costs one credit. The home route uses a 1×1 matrix; its baseline cost is one credit, plus any documented distance surcharge. The adapter tracks today's credits from successful Geoapify responses and counts failed calls separately. This is HomeRadar's usage, not an account-wide total. The address lookup is repeated after the movement distance configured for that person is reached (100 meters by default). Smaller values cause more address lookups and consume more credits. Street and house number are shown only when Geoapify's returned address is within 100 meters of the person's coordinates; other locality fields remain available. The full raw response remains available for inspection. Geoapify routing provides free-flow or approximated traffic, not live traffic. The API key is stored as a protected, encrypted adapter setting.
 
 ## Changelog
 
@@ -134,7 +132,7 @@ Weitere Informationen findest du in der [OSRM-HTTP-API-Dokumentation](https://pr
 - Die Fahrzeit nach Hause lokal auf null setzen, wenn sich eine Person innerhalb des Zuhause-Radius befindet; dafür wird keine Routenanfrage benötigt.
 - Eine zentrale Anwesenheitsübersicht mit Boolean, Personenanzahl und Namen der anwesenden Personen anzeigen.
 - Anwesenheit, aktuellen Ort, Entfernungen, Fahrzeiten und den Status der Routenberechnung im ioBroker-Datenpunktbaum anzeigen.
-- Erfolgreiche und fehlgeschlagene OSRM- und Geoapify-Aufrufe zählen, Tageswerte 90 Tage speichern und Geoapify-Credits erfolgreicher Antworten erfassen.
+- Erfolgreiche und fehlgeschlagene OSRM- und Geoapify-Aufrufe zählen, Tageswerte 30 Tage speichern und Geoapify-Credits erfolgreicher Antworten erfassen.
 
 ## Datenpunktstruktur
 
@@ -179,9 +177,7 @@ apiUsage
 │     ├─ routing.successful / failed
 │     ├─ addressLookup.successful / failed
 │     └─ credits
-├─ history.<YYYY-MM-DD>      dieselben Tageszähler, 90 Tage aufbewahrt
-└─ total
-   └─ geoapifyCredits        erfasste Credits seit Beginn der Statistik
+└─ history.<YYYY-MM-DD>      dieselben Tageszähler, 30 Tage aufbewahrt
 ```
 
 Unter `travelTimes` gibt es nur die Route nach Hause. Befindet sich eine Person innerhalb des Zuhause-Radius, werden Fahrzeit und Entfernung lokal auf null gesetzt. Beim Start wird jede Person einmal geprüft. Danach wird nur eine Person aktualisiert, wenn sich ihre Koordinaten ändern. Nach einer erfolgreichen Anfrage wird die Route wiederverwendet, bis sich der Standort um mindestens 30 Meter vom letzten erfolgreichen Routenaufruf entfernt hat. Schlägt das Routing fehl und befindet sich die Person innerhalb eines konfigurierten Orts mit beiden eingetragenen Fallback-Werten, verwendet der Adapter Entfernung und Fahrzeit dieses Orts. Nach einem Fehler versucht HomeRadar es bei der nächsten Koordinatenänderung oder beim nächsten Adapterstart erneut.
@@ -208,7 +204,7 @@ Trage in den Instanzeinstellungen einen Geoapify-API-Schlüssel ein. Über zwei 
 2. Kopiere den API-Schlüssel des Projekts unter **API Keys**.
 3. Trage ihn in den HomeRadar-Instanzeinstellungen unter **Reisezeiten** ein.
 
-Der [kostenlose Geoapify-Tarif](https://www.geoapify.com/pricing-details/) umfasst derzeit 3.000 Credits pro Tag. Eine Adressabfrage kostet einen Credit. Die Heimroute verwendet eine 1×1-Matrix mit einem Credit Grundkosten zuzüglich eines möglichen, dokumentierten Entfernungsaufschlags. Der Adapter zählt Credits erfolgreicher Geoapify-Antworten und erfasst fehlgeschlagene Aufrufe separat. Die Geoapify-API liefert keinen Gesamtverbrauch des Kontos zurück; Aufrufe anderer Anwendungen mit demselben Projekt werden nicht mitgezählt. Der Adressaufruf erfolgt erneut, wenn die pro Person eingestellte Entfernung erreicht ist (Standard: 100 Meter). Kleinere Werte führen zu mehr Abfragen und verbrauchen mehr Credits. Geoapify bietet beim Routing Free-Flow- oder angenäherten Verkehr, aber keine Live-Verkehrsdaten. Der API-Schlüssel wird geschützt und verschlüsselt in den Adaptereinstellungen gespeichert.
+Der [kostenlose Geoapify-Tarif](https://www.geoapify.com/pricing-details/) umfasst derzeit 3.000 Credits pro Tag. Eine Adressabfrage kostet einen Credit. Die Heimroute verwendet eine 1×1-Matrix mit einem Credit Grundkosten zuzüglich eines möglichen, dokumentierten Entfernungsaufschlags. Der Adapter zählt die heutigen Credits erfolgreicher Geoapify-Antworten und erfasst fehlgeschlagene Aufrufe separat. Angezeigt wird der Verbrauch von HomeRadar, kein kontoweiter Gesamtverbrauch. Der Adressaufruf erfolgt erneut, wenn die pro Person eingestellte Bewegungsentfernung erreicht ist (Standard: 100 Meter). Kleinere Werte führen zu mehr Abfragen und verbrauchen mehr Credits. Straße und Hausnummer werden nur übernommen, wenn Geoapifys Adresstreffer höchstens 100 Meter von den Koordinaten entfernt liegt. Andere Ortsangaben bleiben verfügbar; die vollständige Rohantwort bleibt zur Prüfung gespeichert. Geoapify bietet beim Routing Free-Flow- oder angenäherten Verkehr, aber keine Live-Verkehrsdaten. Der API-Schlüssel wird geschützt und verschlüsselt in den Adaptereinstellungen gespeichert.
 
 ## Versionsverlauf
 

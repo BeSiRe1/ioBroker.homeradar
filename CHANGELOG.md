@@ -2,10 +2,12 @@
 
 ## 0.2.2 (2026-10-07)
 
+- Suppress street and house number when Geoapify's result is more than 100 meters from the person's coordinates; retain other address fields and the raw response.
+- Limit daily API history to 30 days and remove the cumulative Geoapify credit counter.
 - Calculate and store only each person's route home; keep configured places for local presence detection and home-route fallback.
 - Move per-person coordinates and OpenStreetMap links into dedicated `location.coordinates` and `location.map` channels.
 - Add an address refresh distance for each person, defaulting to 100 meters, with an explicit Geoapify credit-use hint in the settings.
-- Track successful and failed OSRM and Geoapify requests by day and retain daily history for 90 days.
+- Track successful and failed OSRM and Geoapify requests by day and retain daily history for 30 days.
 - Track Geoapify credits for successful responses using the published reverse-geocoding and single-destination route-matrix pricing rules.
 
 ## 0.2.1 (2026-10-06)

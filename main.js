@@ -3,7 +3,8 @@
 const utils = require("@iobroker/adapter-core");
 
 const ROUTE_REQUEST_GAP_MS = 1200;
-const API_USAGE_HISTORY_DAYS = 90;
+const API_USAGE_HISTORY_DAYS = 30;
+const ADDRESS_COMPONENT_MAX_DISTANCE_METERS = 100;
 const API_USAGE_COUNTERS = [
   "osrm.routing.successful",
   "osrm.routing.failed",
@@ -332,8 +333,7 @@ class HomeRadarAdapter extends utils.Adapter {
   async initializeApiUsage() {
     await this.ensureChannel("apiUsage", "API-Aufrufstatistik");
     await this.ensureChannel("apiUsage.today", "Heute");
-    await this.ensureChannel("apiUsage.history", "Tagesverlauf (90 Tage)");
-    await this.ensureChannel("apiUsage.total", "Gesamt");
+    await this.ensureChannel("apiUsage.history", "Tagesverlauf (30 Tage)");
     await this.ensureApiUsageTree("apiUsage.today");
     await this.ensureState(
       "apiUsage.today.date",
@@ -341,12 +341,7 @@ class HomeRadarAdapter extends utils.Adapter {
       "string",
       "text",
     );
-    await this.ensureState(
-      "apiUsage.total.geoapifyCredits",
-      "Geoapify-Credits insgesamt seit Beginn der Erfassung",
-      "number",
-      "value",
-    );
+    await this.delObjectAsync("apiUsage.total", { recursive: true });
 
     for (const counter of API_USAGE_COUNTERS) {
       const id = `apiUsage.today.${counter}`;
@@ -364,10 +359,6 @@ class HomeRadarAdapter extends utils.Adapter {
     await this.ensureUsageHistoryDay(today);
     if (!this.apiUsageDate) {
       await this.resetTodayApiUsage(today);
-    }
-    const total = await this.getStateAsync("apiUsage.total.geoapifyCredits");
-    if (!total || !Number.isFinite(Number(total.val))) {
-      await this.setValue("apiUsage.total.geoapifyCredits", 0);
     }
     await this.pruneApiUsageHistory(today);
     this.scheduleApiUsageRollover();
@@ -450,10 +441,6 @@ class HomeRadarAdapter extends utils.Adapter {
       if (credits > 0) {
         await this.incrementUsageState("apiUsage.today.geoapify.credits", credits);
         await this.incrementUsageState(`${historyPath}.geoapify.credits`, credits);
-        await this.incrementUsageState(
-          "apiUsage.total.geoapifyCredits",
-          credits,
-        );
       }
     });
     this.apiUsageQueue = task.catch((error) => {
@@ -1023,17 +1010,41 @@ class HomeRadarAdapter extends utils.Adapter {
         );
         return;
       }
+      const addressProperties = { ...properties };
+      const resultDistance = this.parseCoordinate(properties.distance);
+      const streetAndHouseNumberTooFar =
+        Number.isFinite(resultDistance) &&
+        resultDistance > ADDRESS_COMPONENT_MAX_DISTANCE_METERS;
+      if (streetAndHouseNumberTooFar) {
+        addressProperties.street = null;
+        addressProperties.housenumber = null;
+        addressProperties.address_line1 = null;
+        const locality = this.formatAddressLine(addressProperties);
+        const postalLocality = [
+          addressProperties.postcode,
+          locality === "N/A" ? "" : locality,
+        ]
+          .filter(Boolean)
+          .join(" ");
+        const safeFormatted = [postalLocality, addressProperties.country]
+          .filter(Boolean)
+          .join(", ");
+        addressProperties.formatted = safeFormatted || "N/A";
+        addressProperties.address_line2 = safeFormatted || "N/A";
+      }
       await this.writeAddressProperties(
         `persons.${person.id}.location.address`,
-        properties,
+        addressProperties,
       );
       await this.setValue(
         `persons.${person.id}.location.address.addressLine`,
-        this.formatAddressLine(properties),
+        this.formatAddressLine(addressProperties),
       );
       await this.setValue(
         `persons.${person.id}.location.address.status`,
-        "OK (Geoapify)",
+        streetAndHouseNumberTooFar
+          ? `OK (Geoapify; Straße/Hausnummer ausgeblendet, Treffer ${resultDistance.toFixed(1)} m entfernt)`
+          : "OK (Geoapify)",
       );
     } catch (error) {
       if (!requestRecorded) {
