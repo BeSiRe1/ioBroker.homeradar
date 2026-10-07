@@ -915,6 +915,7 @@ class HomeRadarAdapter extends utils.Adapter {
           `Fallback: ${fallbackPlace.name}`,
         );
       } else {
+        await this.setValue(`${homeTravelBase}.combined`, "Nicht verfügbar");
         await this.setValue(
           `${homeTravelBase}.status`,
           matrixError
