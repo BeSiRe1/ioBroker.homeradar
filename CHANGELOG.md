@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.3 (2026-10-10)
+
+- Keep the newest daily API usage history entry first in the JSON array.
+
 ## 0.2.2 (2026-10-07)
 
 - Store daily API usage history in one JSON datapoint, append the daily counters at 23:59, and retain the history indefinitely; migrate existing per-day history datapoints.

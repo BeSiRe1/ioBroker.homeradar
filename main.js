@@ -387,7 +387,7 @@ class HomeRadarAdapter extends utils.Adapter {
       await this.delObjectAsync("apiUsage.history", { recursive: true });
     }
 
-    history.sort((first, second) => first.date.localeCompare(second.date));
+    history.sort((first, second) => second.date.localeCompare(first.date));
     await this.ensureState(
       "apiUsage.history",
       "Tagesverlauf der API-Aufrufe (JSON)",
@@ -479,7 +479,7 @@ class HomeRadarAdapter extends utils.Adapter {
     }
     const history = parsed.filter((entry) => entry?.date !== dateKey);
     history.push(await this.readTodayApiUsageDay(dateKey));
-    history.sort((first, second) => first.date.localeCompare(second.date));
+    history.sort((first, second) => second.date.localeCompare(first.date));
     await this.setValue("apiUsage.history", JSON.stringify(history));
   }
 
