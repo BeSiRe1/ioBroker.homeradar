@@ -18,6 +18,7 @@ For routing and address details, see the [OSRM HTTP API documentation](https://p
 - Set the travel time home to zero locally when a person is within the home radius; no routing request is needed at home.
 - Show a central home-presence summary with a boolean, person count, and names.
 - Show each person's presence, current place, distances, travel times, and route calculation status in the ioBroker object tree.
+- Manually refresh one person's address and home route with a writable button state.
 - Count successful and failed OSRM and Geoapify requests, keep today's counters as individual states, and append each day's totals to one JSON history state indefinitely.
 
 ## Object structure
@@ -31,6 +32,7 @@ summary
 └─ peopleAtHome            comma-separated names of people at home
 
 persons.<personId>
+├─ refresh                  writable trigger to refresh this person's address and home route
 ├─ location
 │  ├─ coordinates
 │  │  ├─ latitude           current latitude
@@ -43,6 +45,7 @@ persons.<personId>
 │     ├─ street              street (plus available address components)
 │     ├─ housenumber         house number
 │     ├─ status              address lookup status
+│     ├─ lastUpdate          time of the last successful address lookup
 │     └─ response            complete Geoapify response as JSON
 ├─ presence
 │  ├─ isHome                 whether the person is within the home radius
@@ -55,6 +58,7 @@ persons.<personId>
    ├─ minutes                estimated driving time home
    ├─ distance               route length to home in kilometers
    ├─ combined               rounded distance and time, e.g. 39km / 32min
+   ├─ lastUpdate             time of the last successful route result update
    └─ status                 route calculation or cache status
 
 apiUsage
@@ -77,6 +81,8 @@ The route distances follow the route selected by the routing service. With the p
 Presence and straight-line distance calculations are local. Home-route requests send the person's current coordinates and the home coordinates to the routing service. When Geoapify address lookup is enabled, the person's current coordinates are also sent to Geoapify when the per-person refresh distance is reached.
 
 The OpenStreetMap link is generated locally; the browser sends the coordinates to OpenStreetMap only when the link is opened.
+
+Write `true` to `persons.<personId>.refresh` to force an address lookup and home-route update for that person, bypassing the movement-distance caches. Address lookup and routing still need to be enabled. The trigger resets to `false` automatically. The address and route `lastUpdate` states show the time of the last successful result update.
 
 ## Setup
 
@@ -135,6 +141,7 @@ Weitere Informationen findest du in der [OSRM-HTTP-API-Dokumentation](https://pr
 - Die Fahrzeit nach Hause lokal auf null setzen, wenn sich eine Person innerhalb des Zuhause-Radius befindet; dafür wird keine Routenanfrage benötigt.
 - Eine zentrale Anwesenheitsübersicht mit Boolean, Personenanzahl und Namen der anwesenden Personen anzeigen.
 - Anwesenheit, aktuellen Ort, Entfernungen, Fahrzeiten und den Status der Routenberechnung im ioBroker-Datenpunktbaum anzeigen.
+- Adresse und Heimroute einer Person über einen schreibbaren Datenpunkt manuell aktualisieren.
 - Erfolgreiche und fehlgeschlagene OSRM- und Geoapify-Aufrufe zählen, die heutigen Zähler als einzelne Datenpunkte anzeigen und die Tageswerte dauerhaft in einem JSON-Datenpunkt sammeln.
 
 ## Datenpunktstruktur
@@ -148,6 +155,7 @@ summary
 └─ peopleAtHome            durch Komma getrennte Namen der Personen zu Hause
 
 persons.<personId>
+├─ refresh                  schreibbarer Auslöser für Adresse und Heimroute dieser Person
 ├─ location
 │  ├─ coordinates
 │  │  ├─ latitude           aktueller Breitengrad
@@ -160,6 +168,7 @@ persons.<personId>
 │     ├─ street              Straße (sowie verfügbare Adressbestandteile)
 │     ├─ housenumber         Hausnummer
 │     ├─ status              Status der Adressauflösung
+│     ├─ lastUpdate          Zeitpunkt der letzten erfolgreichen Adressabfrage
 │     └─ response            vollständige Geoapify-Antwort als JSON
 ├─ presence
 │  ├─ isHome                 Person befindet sich im Radius von Zuhause
@@ -172,6 +181,7 @@ persons.<personId>
    ├─ minutes                geschätzte Fahrzeit nach Hause
    ├─ distance               Streckenlänge nach Hause in Kilometern
    ├─ combined               gerundete Entfernung und Fahrzeit, z. B. 39km / 32min
+   ├─ lastUpdate             Zeitpunkt des letzten erfolgreichen Fahrzeitergebnisses
    └─ status                 Status der Routenberechnung oder des Caches
 
 apiUsage
@@ -193,6 +203,8 @@ Die Streckenlängen folgen der vom Routingdienst ausgewählten Route. Beim öffe
 Anwesenheit und Luftlinienentfernungen werden lokal berechnet. Für Heimrouten sendet der Adapter die aktuellen Koordinaten der Person und die Koordinaten des Zuhause-Orts an den Routingdienst. Wenn die Geoapify-Adressauflösung aktiviert ist, werden die aktuellen Koordinaten außerdem an Geoapify gesendet, sobald die personenspezifische Entfernungsschwelle erreicht ist.
 
 Der OpenStreetMap-Link wird lokal erzeugt. Der Browser überträgt die Koordinaten erst beim Öffnen des Links an OpenStreetMap.
+
+Schreibe `true` nach `persons.<personId>.refresh`, um für diese Person eine Adress- und Heimroutenabfrage zu erzwingen. Dabei werden die Bewegungsschwellen der Caches umgangen. Adressauflösung und Routenberechnung müssen dafür aktiviert sein. Der Auslöser wird automatisch auf `false` zurückgesetzt. Die `lastUpdate`-Datenpunkte für Adresse und Fahrzeit zeigen den Zeitpunkt des letzten erfolgreich aktualisierten Ergebnisses.
 
 ## Einrichtung
 

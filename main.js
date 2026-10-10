@@ -22,6 +22,7 @@ class HomeRadarAdapter extends utils.Adapter {
     this.inputToPerson = new Map();
     this.personGeneration = new Map();
     this.pendingPeople = new Set();
+    this.forceRefreshPeople = new Set();
     this.activePeople = new Set();
     this.routeCache = new Map();
     this.addressCache = new Map();
@@ -53,6 +54,7 @@ class HomeRadarAdapter extends utils.Adapter {
       this.inputToPerson.set(person.longitudeId, person);
       this.subscribeForeignStates(person.latitudeId);
       this.subscribeForeignStates(person.longitudeId);
+      this.subscribeStates(`persons.${person.id}.refresh`);
     }
 
     await this.setState("info.connection", true, true);
@@ -68,6 +70,25 @@ class HomeRadarAdapter extends utils.Adapter {
     const person = this.inputToPerson.get(id);
     if (person) {
       this.schedulePersonUpdate(person);
+      return;
+    }
+
+    const relativeId = id.startsWith(`${this.namespace}.`)
+      ? id.slice(this.namespace.length + 1)
+      : id;
+    const refreshMatch = relativeId.match(/^persons\.([^.]+)\.refresh$/);
+    if (refreshMatch && state.val === true && !state.ack) {
+      const refreshPerson = this.people.find(
+        (entry) => entry.id === refreshMatch[1],
+      );
+      void this.setValue(relativeId, false).catch((error) => {
+        this.log.warn(
+          `Aktualisierungsauslöser für ${refreshPerson?.name || refreshMatch[1]} konnte nicht zurückgesetzt werden: ${error.message || error}`,
+        );
+      });
+      if (refreshPerson) {
+        this.schedulePersonUpdate(refreshPerson, true);
+      }
     }
   }
 
@@ -637,6 +658,15 @@ class HomeRadarAdapter extends utils.Adapter {
 
     for (const person of this.people) {
       await this.ensureChannel(`persons.${person.id}`, person.name);
+      const refreshId = `persons.${person.id}.refresh`;
+      await this.ensureState(
+        refreshId,
+        "Standortdaten und Reisezeit aktualisieren",
+        "boolean",
+        "button",
+      );
+      await this.extendObjectAsync(refreshId, { common: { write: true } });
+      await this.setValue(refreshId, false);
       await this.ensureChannel(
         `persons.${person.id}.location`,
         "Aktueller Standort",
@@ -704,6 +734,13 @@ class HomeRadarAdapter extends utils.Adapter {
         "text",
       );
       await this.ensureState(
+        `persons.${person.id}.location.address.lastUpdate`,
+        "Letzte erfolgreiche Adressabfrage",
+        "number",
+        "date",
+        "ms",
+      );
+      await this.ensureState(
         `persons.${person.id}.location.address.response`,
         "Vollständige Geoapify-Antwort (JSON)",
         "string",
@@ -754,6 +791,13 @@ class HomeRadarAdapter extends utils.Adapter {
         "Entfernung und Fahrzeit",
         "string",
         "text",
+      );
+      await this.ensureState(
+        `persons.${person.id}.travelTime.home.lastUpdate`,
+        "Letzte erfolgreiche Aktualisierung der Fahrzeit",
+        "number",
+        "date",
+        "ms",
       );
       await this.ensureState(
         `persons.${person.id}.travelTime.home.status`,
@@ -808,12 +852,15 @@ class HomeRadarAdapter extends utils.Adapter {
     }
   }
 
-  schedulePersonUpdate(person) {
+  schedulePersonUpdate(person, forceRefresh = false) {
     this.personGeneration.set(
       person.id,
       (this.personGeneration.get(person.id) || 0) + 1,
     );
     this.pendingPeople.add(person.id);
+    if (forceRefresh) {
+      this.forceRefreshPeople.add(person.id);
+    }
     if (this.activePeople.has(person.id)) {
       return;
     }
@@ -823,8 +870,9 @@ class HomeRadarAdapter extends utils.Adapter {
       while (this.pendingPeople.has(person.id)) {
         this.pendingPeople.delete(person.id);
         const generation = this.personGeneration.get(person.id);
+        const refreshNow = this.forceRefreshPeople.delete(person.id);
         try {
-          await this.updatePerson(person, generation);
+          await this.updatePerson(person, generation, refreshNow);
         } catch (error) {
           this.log.warn(
             `Aktualisierung für ${person.name} fehlgeschlagen: ${error.message || error}`,
@@ -868,7 +916,7 @@ class HomeRadarAdapter extends utils.Adapter {
     await this.setState(id, value, true);
   }
 
-  async updatePerson(person, generation) {
+  async updatePerson(person, generation, forceRefresh = false) {
     const coordinates = await this.readPersonCoordinates(person);
     if (!coordinates) {
       await this.setValue(
@@ -912,7 +960,7 @@ class HomeRadarAdapter extends utils.Adapter {
       `persons.${person.id}.location.map.openStreetMapUrl`,
       this.openStreetMapUrl(coordinates),
     );
-    await this.updatePersonAddress(person, coordinates);
+    await this.updatePersonAddress(person, coordinates, forceRefresh);
     this.presenceByPerson.set(person.id, isHome);
     await this.setValue(`persons.${person.id}.presence.isHome`, isHome);
     await this.setValue(
@@ -948,6 +996,7 @@ class HomeRadarAdapter extends utils.Adapter {
       await this.setValue(`${homeTravelBase}.distance`, 0);
       await this.setValue(`${homeTravelBase}.combined`, "0km / 0min");
       await this.setValue(`${homeTravelBase}.status`, "Am Ziel");
+      await this.setValue(`${homeTravelBase}.lastUpdate`, Date.now());
       return;
     }
 
@@ -963,7 +1012,11 @@ class HomeRadarAdapter extends utils.Adapter {
     let matrix;
     let matrixError;
     try {
-      matrix = await this.getPersonRouteMatrix(person, coordinates);
+      matrix = await this.getPersonRouteMatrix(
+        person,
+        coordinates,
+        forceRefresh,
+      );
     } catch (error) {
       matrixError = error;
     }
@@ -999,6 +1052,7 @@ class HomeRadarAdapter extends utils.Adapter {
           `${homeTravelBase}.status`,
           `Fallback: ${fallbackPlace.name}`,
         );
+        await this.setValue(`${homeTravelBase}.lastUpdate`, Date.now());
       } else {
         await this.setValue(`${homeTravelBase}.combined`, "Nicht verfügbar");
         await this.setValue(
@@ -1029,6 +1083,7 @@ class HomeRadarAdapter extends utils.Adapter {
         `${homeTravelBase}.status`,
         `${cacheLabel} (${providerLabel})`,
       );
+      await this.setValue(`${homeTravelBase}.lastUpdate`, Date.now());
     }
 
     if (matrixError) {
@@ -1043,7 +1098,7 @@ class HomeRadarAdapter extends utils.Adapter {
     return `https://www.openstreetmap.org/?mlat=${latitude}&mlon=${longitude}#map=17/${latitude}/${longitude}`;
   }
 
-  async updatePersonAddress(person, coordinates) {
+  async updatePersonAddress(person, coordinates, forceRefresh = false) {
     if (!this.getConfigValue("routingTab", "useGeoapifyAddressLookup", false)) {
       return;
     }
@@ -1056,6 +1111,7 @@ class HomeRadarAdapter extends utils.Adapter {
     const cached = this.addressCache.get(person.id);
     const addressUpdateDistanceMeters = person.addressUpdateDistanceMeters;
     if (
+      !forceRefresh &&
       cached &&
       this.distanceMeters(
         cached.origin.latitude,
@@ -1110,6 +1166,10 @@ class HomeRadarAdapter extends utils.Adapter {
           `persons.${person.id}.location.address.status`,
           "Keine Adresse gefunden",
         );
+        await this.setValue(
+          `persons.${person.id}.location.address.lastUpdate`,
+          Date.now(),
+        );
         return;
       }
       const addressProperties = { ...properties };
@@ -1147,6 +1207,10 @@ class HomeRadarAdapter extends utils.Adapter {
         streetAndHouseNumberTooFar
           ? `OK (Geoapify; Straße/Hausnummer ausgeblendet, Treffer ${resultDistance.toFixed(1)} m entfernt)`
           : "OK (Geoapify)",
+      );
+      await this.setValue(
+        `persons.${person.id}.location.address.lastUpdate`,
+        Date.now(),
       );
     } catch (error) {
       if (!requestRecorded) {
@@ -1252,9 +1316,10 @@ class HomeRadarAdapter extends utils.Adapter {
     return [streetPart, localityPart].filter(Boolean).join(", ") || "N/A";
   }
 
-  async getPersonRouteMatrix(person, origin) {
+  async getPersonRouteMatrix(person, origin, forceRefresh = false) {
     const cached = this.routeCache.get(person.id);
     if (
+      !forceRefresh &&
       cached &&
       this.distanceMeters(
         cached.origin.latitude,

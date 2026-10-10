@@ -2,6 +2,7 @@
 
 ## 0.2.3 (2026-10-10)
 
+- Add per-person address and home-route last-update datapoints and a writable refresh trigger that forces both updates.
 - Keep the newest daily API usage history entry first in the JSON array.
 
 ## 0.2.2 (2026-10-07)
